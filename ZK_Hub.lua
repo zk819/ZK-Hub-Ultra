@@ -621,7 +621,7 @@ local function UpdateESP()
                 nameLabel.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight/2 - 16)
             end
 
-                        -- VIDA TEXTO
+            -- VIDA TEXTO
             if Config.ESPHealthText then
                 if not esp.HealthText then
                     local healthLabel = Drawing.new("Text")
@@ -647,10 +647,6 @@ local function UpdateESP()
                 
                 healthLabel.Color = GetHealthColor(health, maxHealth)
                 healthLabel.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight/2 - 2)
-            else
-                if esp.HealthText then
-                    esp.HealthText.Visible = false
-                end
             end
 
             -- DISTÂNCIA
@@ -670,10 +666,6 @@ local function UpdateESP()
                 distLabel.Visible = true
                 distLabel.Text = string.format("📏 %.0fm", distance)
                 distLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 2)
-            else
-                if esp.Dist then
-                    esp.Dist.Visible = false
-                end
             end
             
             -- ARMA
@@ -693,10 +685,6 @@ local function UpdateESP()
                 weaponLabel.Visible = true
                 weaponLabel.Text = "🔫 " .. weaponName
                 weaponLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 18)
-            else
-                if esp.Weapon then
-                    esp.Weapon.Visible = false
-                end
             end
         else
             if ESPDrawings[model] then
@@ -1214,7 +1202,7 @@ local function CreateUI()
     contentFrame.Position = UDim2.new(0, 10, 0, 70)
     contentFrame.BackgroundTransparency = 1
     contentFrame.ScrollBarThickness = 4
-        contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
     -- ===== CONSTRUÇÃO DO CONTEÚDO =====
     local y = 0
@@ -1239,7 +1227,7 @@ local function CreateUI()
     
     y = y + 35
 
-    -- ===== AIMBOT PRINCIPAL =====
+      -- ===== AIMBOT PRINCIPAL =====
     local mainTitle = Instance.new("TextLabel", contentFrame)
     mainTitle.Size = UDim2.new(1, -20, 0, 40)
     mainTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1432,7 +1420,7 @@ local function CreateUI()
     y = y + createToggle(contentFrame, y, "🔫 Mostrar Arma", "ShowWeapon", true)
     y = y + 5
 
-    -- ===== ESP =====
+      -- ===== ESP =====
     local espTitle = Instance.new("TextLabel", contentFrame)
     espTitle.Size = UDim2.new(1, -20, 0, 40)
     espTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1504,7 +1492,7 @@ local function CreateUI()
     y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
     y = y + 5
 
-    -- CRÉDITO
+     -- CRÉDITO
     local credit = Instance.new("TextLabel", contentFrame)
     credit.Size = UDim2.new(1, -20, 0, 40)
     credit.Position = UDim2.new(0, 10, 0, y)
@@ -1576,3 +1564,4 @@ end
 -- ========== INICIAR ==========
 CreateUI()
 Notify("ZK HUB v8.0 • AIMBOT PROFISSIONAL")
+```
