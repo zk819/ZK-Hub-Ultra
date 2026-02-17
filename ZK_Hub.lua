@@ -703,112 +703,6 @@ local function UpdateESP()
     end
 end
 
--- ========== HITBOX ==========
-local function UpdateHitbox()
-    if not Config.ShowHitbox or not DrawingSupported then
-        for _, d in pairs(HitboxDrawings) do
-            pcall(function() d:Remove() end)
-        end
-        HitboxDrawings = {}
-        return
-    end
-
-    for model, circle in pairs(HitboxDrawings) do
-        local humanoid = model and model:FindFirstChild("Humanoid")
-        if not humanoid or humanoid.Health <= 0 then
-            pcall(function() circle:Remove() end)
-            HitboxDrawings[model] = nil
-        end
-    end
-
-    if CurrentTarget and CurrentTarget.Part then
-        local model = CurrentTarget.Model
-        local part = CurrentTarget.Part
-        local humanoid = model and model:FindFirstChild("Humanoid")
-        
-        if humanoid and humanoid.Health > 0 then
-            local pos, vis = Camera:WorldToViewportPoint(part.Position)
-            if vis then
-                if not HitboxDrawings[model] then
-                    local circle = Drawing.new("Circle")
-                    circle.Visible = true
-                    circle.Thickness = 2
-                    circle.NumSides = 30
-                    circle.Filled = false
-                    circle.Radius = 12
-                    HitboxDrawings[model] = circle
-                end
-
-                local circle = HitboxDrawings[model]
-                circle.Position = Vector2.new(pos.X, pos.Y)
-                
-                local healthPercent = humanoid.Health / humanoid.MaxHealth
-                if healthPercent > 0.6 then
-                    circle.Color = Colors.HealthGreen
-                elseif healthPercent > 0.3 then
-                    circle.Color = Colors.HealthYellow
-                else
-                    circle.Color = Colors.HealthRed
-                end
-                
-                circle.Visible = true
-            else
-                if HitboxDrawings[model] then
-                    HitboxDrawings[model].Visible = false
-                end
-            end
-        else
-            if HitboxDrawings[model] then
-                HitboxDrawings[model].Visible = false
-            end
-        end
-    end
-end
-
--- ========== DIREÇÃO DO ALVO ==========
-local function UpdateDirection()
-    if Config.ShowDirection and CurrentTarget and CurrentTarget.Part then
-        local model = CurrentTarget.Model
-        local humanoid = model:FindFirstChild("Humanoid")
-        local root = model:FindFirstChild("HumanoidRootPart")
-        
-        if humanoid and root and humanoid.MoveDirection.Magnitude > 0 then
-            local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
-            if onScreen then
-                if not DirectionArrows[model] then
-                    local arrow = Drawing.new("Triangle")
-                    arrow.Visible = false
-                    arrow.Color = Colors.Primary
-                    arrow.Thickness = 2
-                    arrow.Filled = false
-                    DirectionArrows[model] = arrow
-                end
-                
-                local dir = humanoid.MoveDirection * 3
-                local arrow = DirectionArrows[model]
-                arrow.Visible = true
-                arrow.PointA = Vector2.new(screenPos.X + dir.X, screenPos.Y + dir.Z - 20)
-                arrow.PointB = Vector2.new(screenPos.X - 5, screenPos.Y - 15)
-                arrow.PointC = Vector2.new(screenPos.X + 5, screenPos.Y - 15)
-            else
-                if DirectionArrows[model] then
-                    DirectionArrows[model].Visible = false
-                end
-            end
-        else
-            if DirectionArrows[model] then
-                DirectionArrows[model].Visible = false
-            end
-        end
-    else
-        for _, arrow in pairs(DirectionArrows) do
-            if arrow then
-                arrow.Visible = false
-            end
-        end
-    end
-end
-
 -- ========== LOOP PRINCIPAL ==========
 RunService.RenderStepped:Connect(function()
     -- Aimbot
@@ -1227,7 +1121,7 @@ local function CreateUI()
     
     y = y + 35
 
-      -- ===== AIMBOT PRINCIPAL =====
+    -- ===== AIMBOT PRINCIPAL =====
     local mainTitle = Instance.new("TextLabel", contentFrame)
     mainTitle.Size = UDim2.new(1, -20, 0, 40)
     mainTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1420,7 +1314,7 @@ local function CreateUI()
     y = y + createToggle(contentFrame, y, "🔫 Mostrar Arma", "ShowWeapon", true)
     y = y + 5
 
-      -- ===== ESP =====
+    -- ===== ESP =====
     local espTitle = Instance.new("TextLabel", contentFrame)
     espTitle.Size = UDim2.new(1, -20, 0, 40)
     espTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1471,7 +1365,7 @@ local function CreateUI()
         y = y + 5
     end
 
-    -- ===== EXTRAS =====
+     -- ===== EXTRAS =====
     local extrasTitle = Instance.new("TextLabel", contentFrame)
     extrasTitle.Size = UDim2.new(1, -20, 0, 40)
     extrasTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1492,7 +1386,7 @@ local function CreateUI()
     y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
     y = y + 5
 
-     -- CRÉDITO
+    -- CRÉDITO
     local credit = Instance.new("TextLabel", contentFrame)
     credit.Size = UDim2.new(1, -20, 0, 40)
     credit.Position = UDim2.new(0, 10, 0, y)
