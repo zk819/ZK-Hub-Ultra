@@ -1,6 +1,5 @@
 -- ============================================
--- ZK HUB 🎯 - AIMBOT ULTRA PROFISSIONAL
--- DESIGN EXCLUSIVO - v7.5.0 + NOVAS OPÇÕES
+-- ZK HUB 🎯 - AIMBOT PROFISSIONAL v8.0
 -- CRIADO POR ECTORSTUFFO
 -- ============================================
 
@@ -28,9 +27,7 @@ local Colors = {
     Inactive = Color3.fromRGB(60, 60, 70),
     HealthGreen = Color3.fromRGB(0, 255, 0),
     HealthYellow = Color3.fromRGB(255, 255, 0),
-    HealthRed = Color3.fromRGB(255, 0, 0),
-    TeamBlue = Color3.fromRGB(0, 100, 255),
-    TeamRed = Color3.fromRGB(255, 50, 50)
+    HealthRed = Color3.fromRGB(255, 0, 0)
 }
 
 -- ========== CONFIGURAÇÕES ==========
@@ -63,7 +60,6 @@ local Config = {
     RainbowFOV = true,
     FOVColor = Color3.fromRGB(255, 0, 0),
     ShowFOV = true,
-    ShowCrosshair = false,
     ShowHitbox = false,
     ShowDistance = true,
     ShowHealth = true,
@@ -71,7 +67,7 @@ local Config = {
     ShowDirection = false,
     ShowWeapon = true,
     
-    -- ESP Principal
+    -- ESP
     ESPActive = true,
     ESPBox = true,
     ESPBoxColor = Color3.fromRGB(255, 255, 255),
@@ -82,45 +78,6 @@ local Config = {
     ESPWeapon = true,
     ESPTeamColor = true,
     ESPPercent = true,
-    
-    -- NOVAS OPÇÕES ESP
-    CornerBox = false,
-    Skeleton = false,
-    HeadDot = false,
-    Tracers = false,
-    TracerOrigin = "Bottom",
-    GlowIntensity = 50,
-    Opacity = 80,
-    WeaponESP = false,
-    ItemESP = false,
-    GrenadeESP = false,
-    
-    -- NOVAS OPÇÕES MOVIMENTO
-    SpeedToggle = false,
-    SpeedMultiplier = 50,
-    SafeMode = false,
-    StrafeAssist = false,
-    InfiniteJump = false,
-    JumpHeight = 50,
-    JumpBoost = false,
-    FlyMode = false,
-    NoClip = false,
-    FlySpeed = 50,
-    BhopAssist = false,
-    
-    -- NOVAS OPÇÕES MISC
-    AntiAFK = false,
-    AutoReload = false,
-    AutoRespawn = false,
-    ChatFilter = false,
-    FPS = false,
-    Watermark = true,
-    KeybindList = false,
-    ThemeMode = "Dark",
-    RadarMode = "Static",
-    RadarSize = "Small",
-    ShowRadar = false,
-    ConfigSave = false,
     
     -- Extras
     Notifications = true,
@@ -142,52 +99,9 @@ local DirectionArrows = {}
 local FPSBoosterActive = false
 local OriginalSettings = {}
 local WatermarkText = nil
-local Flying = false
-local FlyConnection = nil
-local BodyGyro = nil
-local BodyVelocity = nil
-local NoclipConnection = nil
-local InfiniteJumpConnection = nil
-local BhopConnection = nil
 
 -- ========== SUPORTE A DRAWING ==========
 local DrawingSupported = pcall(Drawing.new, "Square")
-
--- ========== REMOVER PONTOS VERDES ==========
-local function RemoveGreenDots()
-    if not Config.RemoveGreenDots then return end
-    
-    pcall(function()
-        for _, v in ipairs(Workspace:GetDescendants()) do
-            if v:IsA("BillboardGui") then
-                v.Enabled = false
-                v:Destroy()
-            end
-            
-            if v:IsA("BasePart") then
-                if v.BrickColor == BrickColor.new("Lime green") or 
-                   v.BrickColor == BrickColor.new("Bright green") then
-                    v.Transparency = 1
-                end
-            end
-            
-            local name = v.Name:lower()
-            if name:find("point") or name:find("marker") or name:find("dot") or name:find("aim") then
-                if v:IsA("BasePart") then
-                    v.Transparency = 1
-                elseif v:IsA("Model") then
-                    v:Destroy()
-                end
-            end
-        end
-    end)
-end
-
-spawn(function()
-    while wait(0.5) do
-        RemoveGreenDots()
-    end
-end)
 
 -- ========== NOTIFICAÇÃO ==========
 local function Notify(msg)
@@ -204,7 +118,7 @@ end
 
 -- ========== WATERMARK ==========
 local function UpdateWatermark()
-    if Config.Watermark then
+    if Config.FPSCounter then
         if not WatermarkText then
             WatermarkText = Drawing.new("Text")
             WatermarkText.Visible = true
@@ -554,7 +468,9 @@ RunService.RenderStepped:Connect(function()
         CurrentTarget = nil
     end
     
+    UpdateFOV()
     UpdateStatus()
+    UpdateESP()
 end)
 
 -- ========== FUNÇÃO PARA COR DA VIDA ==========
@@ -569,178 +485,7 @@ local function GetHealthColor(health, maxHealth)
     end
 end
 
--- ========== FUNÇÕES DE MOVIMENTO ==========
-local function UpdateFly()
-    if not Config.FlyMode then
-        if FlyConnection then FlyConnection:Disconnect(); FlyConnection = nil end
-        if BodyGyro then BodyGyro:Destroy(); BodyGyro = nil end
-        if BodyVelocity then BodyVelocity:Destroy(); BodyVelocity = nil end
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            char.Humanoid.PlatformStand = false
-        end
-        return
-    end
-
-    local char = LocalPlayer.Character
-    if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("Humanoid")
-    
-    if not root or not humanoid then return end
-    
-    if not FlyConnection then
-        humanoid.PlatformStand = true
-        
-        BodyGyro = Instance.new("BodyGyro")
-        BodyGyro.Parent = root
-        BodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-        BodyGyro.CFrame = root.CFrame
-        
-        BodyVelocity = Instance.new("BodyVelocity")
-        BodyVelocity.Parent = root
-        BodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-        BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        
-        FlyConnection = RunService.Heartbeat:Connect(function()
-            if not Config.FlyMode then return end
-            
-            local moveDirection = Vector3.new(0, 0, 0)
-            local speed = Config.FlySpeed
-            
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                moveDirection = moveDirection + Camera.CFrame.LookVector * speed
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                moveDirection = moveDirection - Camera.CFrame.LookVector * speed
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                moveDirection = moveDirection - Camera.CFrame.RightVector * speed
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                moveDirection = moveDirection + Camera.CFrame.RightVector * speed
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                moveDirection = moveDirection + Vector3.new(0, speed, 0)
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-                moveDirection = moveDirection - Vector3.new(0, speed, 0)
-            end
-            
-                        BodyVelocity.Velocity = moveDirection
-            BodyGyro.CFrame = CFrame.new(root.Position, root.Position + Camera.CFrame.LookVector)
-        end)
-    end
-end
-
-local function UpdateNoClip()
-    if not Config.NoClip then
-        if NoclipConnection then
-            NoclipConnection:Disconnect()
-            NoclipConnection = nil
-        end
-        return
-    end
-    
-    if not NoclipConnection then
-        NoclipConnection = RunService.Stepped:Connect(function()
-            local char = LocalPlayer.Character
-            if not char then return end
-            for _, part in ipairs(char:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end)
-    end
-end
-
-local function UpdateInfiniteJump()
-    if not Config.InfiniteJump then
-        if InfiniteJumpConnection then
-            InfiniteJumpConnection:Disconnect()
-            InfiniteJumpConnection = nil
-        end
-        return
-    end
-    
-    if not InfiniteJumpConnection then
-        InfiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("Humanoid") then
-                char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
-    end
-end
-
-local function UpdateBhop()
-    if not Config.BhopAssist then
-        if BhopConnection then
-            BhopConnection:Disconnect()
-            BhopConnection = nil
-        end
-        return
-    end
-    
-    if not BhopConnection then
-        BhopConnection = RunService.Heartbeat:Connect(function()
-            local char = LocalPlayer.Character
-            if not char then return end
-            local humanoid = char:FindFirstChild("Humanoid")
-            if humanoid and humanoid.FloorMaterial ~= Enum.Material.Air then
-                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end
-        end)
-    end
-end
-
-local function UpdateSpeed()
-    if not Config.SpeedToggle then return end
-    local char = LocalPlayer.Character
-    if not char then return end
-    local humanoid = char:FindFirstChild("Humanoid")
-    if humanoid then
-        local multiplier = Config.SpeedMultiplier / 50
-        humanoid.WalkSpeed = 16 * multiplier
-        if Config.SafeMode then
-            humanoid.WalkSpeed = math.min(humanoid.WalkSpeed, 32)
-        end
-    end
-end
-
-local function UpdateJump()
-    if not Config.JumpBoost then return end
-    local char = LocalPlayer.Character
-    if not char then return end
-    local humanoid = char:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.JumpPower = Config.JumpHeight * 2
-    end
-end
-
--- ========== FUNÇÕES MISC ==========
-local function UpdateAntiAFK()
-    if not Config.AntiAFK then return end
-    LocalPlayer.Idled:Connect(function()
-        local vu = game:GetService("VirtualUser")
-        vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-        wait(1)
-        vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-    end)
-end
-
-local function UpdateAutoRespawn()
-    if not Config.AutoRespawn then return end
-    LocalPlayer.CharacterAdded:Connect(function()
-        wait(1)
-        Notify("Respawnado!")
-    end)
-end
-
--- ========== ESP COMPLETO ==========
+-- ========== ESP ==========
 local function ClearESP()
     for _, drawing in pairs(ESPDrawings) do
         for _, d in pairs(drawing) do
@@ -748,6 +493,11 @@ local function ClearESP()
         end
     end
     ESPDrawings = {}
+    
+    for _, d in pairs(HitboxDrawings) do
+        pcall(function() d:Remove() end)
+    end
+    HitboxDrawings = {}
 end
 
 local function GetWeaponName(model)
@@ -833,76 +583,24 @@ local function UpdateESP()
                 end
             end
 
-            -- CORNER BOX
-            if Config.CornerBox then
-                if not esp.Corner then
-                    esp.Corner = {}
-                    for i = 1, 4 do
-                        esp.Corner[i] = Drawing.new("Line")
-                        esp.Corner[i].Visible = false
-                        esp.Corner[i].Thickness = 2
-                        esp.Corner[i].Color = Config.ESPBoxColor
-                    end
+            -- HITBOX
+            if Config.ShowHitbox then
+                if not esp.Hitbox then
+                    local circle = Drawing.new("Circle")
+                    circle.Visible = true
+                    circle.Thickness = 2
+                    circle.NumSides = 30
+                    circle.Filled = false
+                    circle.Radius = 12
+                    esp.Hitbox = circle
                 end
-                local x, y = screenPos.X - boxWidth/2, screenPos.Y - boxHeight/2
-                local w, h = boxWidth, boxHeight
-                local cornerSize = math.min(w, h) * 0.2
-                
-                esp.Corner[1].Visible = true
-                esp.Corner[1].From = Vector2.new(x, y)
-                esp.Corner[1].To = Vector2.new(x + cornerSize, y)
-                
-                esp.Corner[2].Visible = true
-                esp.Corner[2].From = Vector2.new(x + w, y)
-                esp.Corner[2].To = Vector2.new(x + w - cornerSize, y)
-                
-                esp.Corner[3].Visible = true
-                esp.Corner[3].From = Vector2.new(x, y + h)
-                esp.Corner[3].To = Vector2.new(x + cornerSize, y + h)
-                
-                esp.Corner[4].Visible = true
-                esp.Corner[4].From = Vector2.new(x + w, y + h)
-                esp.Corner[4].To = Vector2.new(x + w - cornerSize, y + h)
-            end
-
-            -- BARRA DE VIDA
-            if Config.ESPHealthBar then
-                if not esp.HealthBar then
-                    local barBg = Drawing.new("Square")
-                    barBg.Visible = false
-                    barBg.Color = Color3.new(0, 0, 0)
-                    barBg.Transparency = 0.5
-                    barBg.Filled = true
-                    barBg.Thickness = 0
-                    
-                    local barFill = Drawing.new("Square")
-                    barFill.Visible = false
-                    barFill.Filled = true
-                    barFill.Thickness = 0
-                    
-                    esp.HealthBar = {Bg = barBg, Fill = barFill}
+                esp.Hitbox.Position = screenPos
+                if CurrentTarget and CurrentTarget.Model == model then
+                    esp.Hitbox.Visible = true
+                    esp.Hitbox.Color = Colors.Success
+                else
+                    esp.Hitbox.Visible = false
                 end
-                
-                local health = humanoid.Health
-                local maxHealth = humanoid.MaxHealth
-                local healthPercent = health / maxHealth
-                
-                local barWidth = 6
-                local barHeight = boxHeight
-                local barX = screenPos.X - boxWidth/2 - barWidth - 5
-                local barY = screenPos.Y - boxHeight/2
-                
-                esp.HealthBar.Bg.Visible = true
-                esp.HealthBar.Bg.Position = Vector2.new(barX, barY)
-                esp.HealthBar.Bg.Size = Vector2.new(barWidth, barHeight)
-                
-                local fillHeight = barHeight * healthPercent
-                local fillY = barY + (barHeight - fillHeight)
-                
-                esp.HealthBar.Fill.Visible = true
-                esp.HealthBar.Fill.Position = Vector2.new(barX, fillY)
-                esp.HealthBar.Fill.Size = Vector2.new(barWidth, fillHeight)
-                esp.HealthBar.Fill.Color = GetHealthColor(health, maxHealth)
             end
 
             -- NOME
@@ -923,7 +621,7 @@ local function UpdateESP()
                 nameLabel.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight/2 - 16)
             end
 
-            -- VIDA TEXTO
+            --             -- VIDA TEXTO
             if Config.ESPHealthText then
                 if not esp.HealthText then
                     local healthLabel = Drawing.new("Text")
@@ -949,6 +647,10 @@ local function UpdateESP()
                 
                 healthLabel.Color = GetHealthColor(health, maxHealth)
                 healthLabel.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight/2 - 2)
+            else
+                if esp.HealthText then
+                    esp.HealthText.Visible = false
+                end
             end
 
             -- DISTÂNCIA
@@ -968,6 +670,10 @@ local function UpdateESP()
                 distLabel.Visible = true
                 distLabel.Text = string.format("📏 %.0fm", distance)
                 distLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 2)
+            else
+                if esp.Dist then
+                    esp.Dist.Visible = false
+                end
             end
             
             -- ARMA
@@ -987,39 +693,10 @@ local function UpdateESP()
                 weaponLabel.Visible = true
                 weaponLabel.Text = "🔫 " .. weaponName
                 weaponLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 18)
-            end
-
-            -- HEAD DOT
-            if Config.HeadDot then
-                if not esp.HeadDot then
-                    local dot = Drawing.new("Circle")
-                    dot.Visible = false
-                    dot.Color = Colors.Danger
-                    dot.Thickness = 1
-                    dot.Filled = true
-                    dot.Radius = 3
-                    esp.HeadDot = dot
+            else
+                if esp.Weapon then
+                    esp.Weapon.Visible = false
                 end
-                esp.HeadDot.Visible = true
-                esp.HeadDot.Position = Vector2.new(headPos.X, headPos.Y)
-            end
-
-            -- TRACERS
-            if Config.Tracers then
-                if not esp.Tracer then
-                    local tracer = Drawing.new("Line")
-                    tracer.Visible = false
-                    tracer.Color = Colors.Primary
-                    tracer.Thickness = 1
-                    esp.Tracer = tracer
-                end
-                esp.Tracer.Visible = true
-                if Config.TracerOrigin == "Bottom" then
-                    esp.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                else
-                    esp.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-                end
-                esp.Tracer.To = screenPos
             end
         else
             if ESPDrawings[model] then
@@ -1037,6 +714,45 @@ local function UpdateESP()
         end
     end
 end
+            -- ARMA
+            if Config.ESPWeapon then
+                if not esp.Weapon then
+                    local weaponLabel = Drawing.new("Text")
+                    weaponLabel.Visible = false
+                    weaponLabel.Color = Color3.new(1, 0.8, 0)
+                    weaponLabel.Size = 14
+                    weaponLabel.Center = true
+                    weaponLabel.Outline = true
+                    esp.Weapon = weaponLabel
+                end
+                
+                local weaponName = GetWeaponName(model)
+                local weaponLabel = esp.Weapon
+                weaponLabel.Visible = true
+                weaponLabel.Text = "🔫 " .. weaponName
+                weaponLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 18)
+            else
+                if esp.Weapon then
+                    esp.Weapon.Visible = false
+                end
+            end
+        else
+            if ESPDrawings[model] then
+                for _, d in pairs(ESPDrawings[model]) do
+                    if d and d.Visible ~= nil then
+                        if type(d) == "table" and d.Bg and d.Fill then
+                            d.Bg.Visible = false
+                            d.Fill.Visible = false
+                        else
+                            d.Visible = false
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 -- ========== HITBOX ==========
 local function UpdateHitbox()
     if not Config.ShowHitbox or not DrawingSupported then
@@ -1142,6 +858,7 @@ local function UpdateDirection()
         end
     end
 end
+
 -- ========== LOOP PRINCIPAL ==========
 RunService.RenderStepped:Connect(function()
     -- Aimbot
@@ -1168,21 +885,7 @@ RunService.RenderStepped:Connect(function()
     UpdateStatus()
     UpdateESP()
 end)
-
--- Loops de movimento
-RunService.Heartbeat:Connect(function()
-    UpdateFly()
-    UpdateNoClip()
-    UpdateSpeed()
-    UpdateJump()
-    UpdateBhop()
-    UpdateAntiAFK()
-end)
-
-RunService.Stepped:Connect(UpdateInfiniteJump)
-UpdateAutoRespawn()
-
--- ========== FUNÇÕES AUXILIARES UI ==========
+-- ========== FUNÇÕES UI ==========
 local function createToggle(parent, y, text, var, default)
     Config[var] = default
 
@@ -1232,6 +935,7 @@ local function createToggle(parent, y, text, var, default)
 
     return 35
 end
+
 local function createSlider(parent, y, text, var, min, max, default, suffix)
     Config[var] = default
 
@@ -1364,7 +1068,7 @@ local function createDropdown(parent, y, text, var, options, default)
 
     return 40
 end
--- ========== FUNÇÕES ADICIONAIS ==========
+
 local function createKeybind(parent, y, text, var, default)
     Config[var] = default
 
@@ -1427,6 +1131,42 @@ local function createKeybind(parent, y, text, var, default)
     return 45
 end
 
+-- ========== REMOVER PONTOS VERDES ==========
+local function RemoveGreenDots()
+    if not Config.RemoveGreenDots then return end
+    
+    pcall(function()
+        for _, v in ipairs(Workspace:GetDescendants()) do
+            if v:IsA("BillboardGui") then
+                v.Enabled = false
+                v:Destroy()
+            end
+            
+            if v:IsA("BasePart") then
+                if v.BrickColor == BrickColor.new("Lime green") or 
+                   v.BrickColor == BrickColor.new("Bright green") then
+                    v.Transparency = 1
+                end
+            end
+            
+            local name = v.Name:lower()
+            if name:find("point") or name:find("marker") or name:find("dot") or name:find("aim") then
+                if v:IsA("BasePart") then
+                    v.Transparency = 1
+                elseif v:IsA("Model") then
+                    v:Destroy()
+                end
+            end
+        end
+    end)
+end
+
+spawn(function()
+    while wait(0.5) do
+        RemoveGreenDots()
+    end
+end)
+
 -- ========== INTERFACE PRINCIPAL ==========
 local function CreateUI()
     pcall(function()
@@ -1446,8 +1186,8 @@ local function CreateUI()
     -- FRAME PRINCIPAL
     local mainFrame = Instance.new("Frame", UI)
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 520, 0, 850)
-    mainFrame.Position = UDim2.new(0.5, -260, 0.5, -425)
+    mainFrame.Size = UDim2.new(0, 450, 0, 650)
+    mainFrame.Position = UDim2.new(0.5, -225, 0.5, -325)
     mainFrame.BackgroundColor3 = Colors.Background
     mainFrame.Active = true
     mainFrame.Draggable = true
@@ -1456,22 +1196,16 @@ local function CreateUI()
     local frameCorner = Instance.new("UICorner", mainFrame)
     frameCorner.CornerRadius = UDim.new(0, 15)
 
-    local frameStroke = Instance.new("UIStroke", mainFrame)
-    frameStroke.Color = Color3.fromRGB(20, 20, 25)
-    frameStroke.Thickness = 1
-    frameStroke.Transparency = 0.8
-
     -- CABEÇALHO
     local header = Instance.new("Frame", mainFrame)
-    header.Size = UDim2.new(1, 0, 0, 70)
+    header.Size = UDim2.new(1, 0, 0, 60)
     header.BackgroundColor3 = Colors.Surface
-    header.BorderSizePixel = 0
 
     local headerCorner = Instance.new("UICorner", header)
     headerCorner.CornerRadius = UDim.new(0, 15)
 
     local title = Instance.new("TextLabel", header)
-    title.Size = UDim2.new(1, -50, 0.5, 0)
+    title.Size = UDim2.new(1, -50, 0.6, 0)
     title.Position = UDim2.new(0, 15, 0, 5)
     title.BackgroundTransparency = 1
     title.Text = "🎯 ZK HUB"
@@ -1481,28 +1215,29 @@ local function CreateUI()
     title.TextXAlignment = Enum.TextXAlignment.Left
 
     local version = Instance.new("TextLabel", header)
-    version.Size = UDim2.new(1, -50, 0.5, 0)
+    version.Size = UDim2.new(1, -50, 0.4, 0)
     version.Position = UDim2.new(0, 15, 0, 35)
     version.BackgroundTransparency = 1
-    version.Text = "v7.5.0 + NOVAS OPÇÕES • ectorstuffo"
-    version.TextColor3 = Colors.TextDim
+    version.Text = "AIMBOT PROFISSIONAL v8.0"
+    version.TextColor3 = Colors.Primary
     version.TextSize = 14
     version.Font = Enum.Font.Gotham
     version.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- BOTÃO FECHAR
-    local closeMainBtn = Instance.new("TextButton", header)
-    closeMainBtn.Size = UDim2.new(0, 40, 0, 40)
-    closeMainBtn.Position = UDim2.new(1, -50, 0.5, -20)
-    closeMainBtn.BackgroundColor3 = Colors.Danger
-    closeMainBtn.Text = "✕"
-    closeMainBtn.TextColor3 = Colors.Text
-    closeMainBtn.TextSize = 22
-    closeMainBtn.Font = Enum.Font.GothamBold
-    closeMainBtn.BorderSizePixel = 0
-    closeMainBtn.AutoButtonColor = false
+    local closeBtn = Instance.new("TextButton", header)
+    closeBtn.Size = UDim2.new(0, 40, 0, 40)
+    closeBtn.Position = UDim2.new(1, -50, 0.5, -20)
+    closeBtn.BackgroundColor3 = Colors.Danger
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Colors.Text
+    closeBtn.TextSize = 22
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.BorderSizePixel = 0
 
-    closeMainBtn.MouseButton1Click:Connect(function()
+    local closeCorner = Instance.new("UICorner", closeBtn)
+    closeCorner.CornerRadius = UDim.new(1, 0)
+
+    closeBtn.MouseButton1Click:Connect(function()
         UI:Destroy()
         ClearESP()
         if FPSBoosterActive then
@@ -1510,43 +1245,10 @@ local function CreateUI()
         end
     end)
 
-    -- TABS
-    local tabFrame = Instance.new("Frame", mainFrame)
-    tabFrame.Size = UDim2.new(1, -20, 0, 40)
-    tabFrame.Position = UDim2.new(0, 10, 0, 80)
-    tabFrame.BackgroundColor3 = Colors.Surface
-    tabFrame.BorderSizePixel = 0
-
-    local tabCorner = Instance.new("UICorner", tabFrame)
-    tabCorner.CornerRadius = UDim.new(0, 8)
-
-    local tabs = {"AIM", "ESP", "MOV", "MISC"}
-    local tabButtons = {}
-
-    for i, tabName in ipairs(tabs) do
-        local btn = Instance.new("TextButton", tabFrame)
-        btn.Size = UDim2.new(0.25, -2, 0, 30)
-        btn.Position = UDim2.new((i-1) * 0.25, 0, 0.5, -15)
-        btn.BackgroundColor3 = i == 1 and Colors.Primary or Colors.Inactive
-        btn.Text = tabName
-        btn.TextColor3 = Colors.Text
-        btn.TextSize = 14
-        btn.Font = Enum.Font.GothamBold
-        btn.BorderSizePixel = 0
-        table.insert(tabButtons, btn)
-
-        btn.MouseButton1Click:Connect(function()
-            for _, b in ipairs(tabButtons) do
-                b.BackgroundColor3 = Colors.Inactive
-            end
-            btn.BackgroundColor3 = Colors.Primary
-        end)
-    end
-
     -- ÁREA DE CONTEÚDO (SCROLL)
     local contentFrame = Instance.new("ScrollingFrame", mainFrame)
-    contentFrame.Size = UDim2.new(1, -20, 1, -160)
-    contentFrame.Position = UDim2.new(0, 10, 0, 130)
+    contentFrame.Size = UDim2.new(1, -20, 1, -80)
+    contentFrame.Position = UDim2.new(0, 10, 0, 70)
     contentFrame.BackgroundTransparency = 1
     contentFrame.ScrollBarThickness = 4
     contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -1559,7 +1261,7 @@ local function CreateUI()
     infoLabel.Size = UDim2.new(1, -20, 0, 25)
     infoLabel.Position = UDim2.new(0, 10, 0, y)
     infoLabel.BackgroundTransparency = 1
-    infoLabel.Text = "📊 FPS: " .. FPSValue .. " | 🎯 AIMBOT PROFISSIONAL"
+    infoLabel.Text = "📊 FPS: " .. FPSValue .. " | 🎯 ZK HUB"
     infoLabel.TextColor3 = Colors.TextDim
     infoLabel.TextSize = 14
     infoLabel.Font = Enum.Font.Gotham
@@ -1567,7 +1269,7 @@ local function CreateUI()
     
     spawn(function()
         while UI and UI.Parent do
-            infoLabel.Text = "📊 FPS: " .. FPSValue .. " | 🎯 AIMBOT PROFISSIONAL"
+            infoLabel.Text = "📊 FPS: " .. FPSValue .. " | 🎯 ZK HUB"
             wait(0.5)
         end
     end)
@@ -1588,17 +1290,17 @@ local function CreateUI()
 
     y = y + createToggle(contentFrame, y, "Ativar Aim Assist", "AimbotActive", true)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "⚡ Rage Mode", "RageMode", false)
+    y = y + createToggle(contentFrame, y, "⚡ Rage Mode (sem suavidade)", "RageMode", false)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "🔒 Aim Lock", "AimLock", false)
+    y = y + createToggle(contentFrame, y, "🔒 Aim Lock (trava fixa)", "AimLock", false)
     y = y + 5
     
     if not Config.RageMode then
-        y = y + createSlider(contentFrame, y, "Suavidade", "AimbotSmooth", 0, 100, 18, "%")
+        y = y + createSlider(contentFrame, y, "Suavidade da Mira", "AimbotSmooth", 0, 100, 18, "%")
         y = y + 5
     end
 
-    -- SELEÇÃO DE ALVO
+    -- ===== SELEÇÃO DE ALVO =====
     local targetTitle = Instance.new("TextLabel", contentFrame)
     targetTitle.Size = UDim2.new(1, -20, 0, 30)
     targetTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1663,12 +1365,12 @@ local function CreateUI()
 
     y = y + 55
 
-    y = y + createDropdown(contentFrame, y, "Prioridade", "Priority", {"Center", "Distance", "Health", "Closest"}, "Center")
+    y = y + createDropdown(contentFrame, y, "Prioridade do Alvo", "Priority", {"Center", "Distance", "Health", "Closest"}, "Center")
     y = y + 5
-    y = y + createToggle(contentFrame, y, "🚫 Ignorar times", "IgnoreTeammates", true)
+    y = y + createToggle(contentFrame, y, "🚫 Ignorar times aliados", "IgnoreTeammates", true)
     y = y + 5
 
-    -- LIMITES
+    -- ===== LIMITES =====
     local limitsTitle = Instance.new("TextLabel", contentFrame)
     limitsTitle.Size = UDim2.new(1, -20, 0, 30)
     limitsTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1680,16 +1382,16 @@ local function CreateUI()
     limitsTitle.TextXAlignment = Enum.TextXAlignment.Left
     y = y + 35
 
-    y = y + createSlider(contentFrame, y, "FOV", "AimbotFOV", 50, 500, 150, "px")
+    y = y + createSlider(contentFrame, y, "Campo de Visão (FOV)", "AimbotFOV", 50, 500, 150, "px")
     y = y + 5
-    y = y + createSlider(contentFrame, y, "Distância Máx", "MaxDistance", 50, 1000, 300, "m")
+    y = y + createSlider(contentFrame, y, "Distância Máxima", "MaxDistance", 50, 1000, 300, "m")
     y = y + 5
-    y = y + createToggle(contentFrame, y, "🔍 Só visível", "AimOnlyVisible", true)
+    y = y + createToggle(contentFrame, y, "🔍 Só mirar se visível", "AimOnlyVisible", true)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "📌 Só no FOV", "AimOnlyInFOV", true)
+    y = y + createToggle(contentFrame, y, "📌 Só mirar dentro do FOV", "AimOnlyInFOV", true)
     y = y + 5
 
-    -- ATIVAÇÃO
+    -- ===== ATIVAÇÃO =====
     local activationTitle = Instance.new("TextLabel", contentFrame)
     activationTitle.Size = UDim2.new(1, -20, 0, 30)
     activationTitle.Position = UDim2.new(0, 10, 0, y)
@@ -1701,25 +1403,25 @@ local function CreateUI()
     activationTitle.TextXAlignment = Enum.TextXAlignment.Left
     y = y + 35
 
-    y = y + createDropdown(contentFrame, y, "Modo", "ActivationMode", {"Always", "Key", "MouseButton"}, "Always")
+    y = y + createDropdown(contentFrame, y, "Modo de Ativação", "ActivationMode", {"Always", "Key", "MouseButton"}, "Always")
     y = y + 5
 
     if Config.ActivationMode == "Key" then
-        y = y + createKeybind(contentFrame, y, "Tecla", "AimKey", Enum.KeyCode.E)
+        y = y + createKeybind(contentFrame, y, "Tecla de Ativação", "AimKey", Enum.KeyCode.E)
         y = y + 5
     end
 
     if Config.ActivationMode == "MouseButton" then
-        y = y + createDropdown(contentFrame, y, "Botão", "AimMouseButton", {"MouseButton2", "MouseButton1"}, "MouseButton2")
+        y = y + createDropdown(contentFrame, y, "Botão do Mouse", "AimMouseButton", {"MouseButton2", "MouseButton1"}, "MouseButton2")
         y = y + 5
     end
 
-    -- PREVISÃO
+    -- ===== PREVISÃO =====
     local predictionTitle = Instance.new("TextLabel", contentFrame)
     predictionTitle.Size = UDim2.new(1, -20, 0, 30)
     predictionTitle.Position = UDim2.new(0, 10, 0, y)
     predictionTitle.BackgroundTransparency = 1
-    predictionTitle.Text = "📈 PREVISÃO"
+    predictionTitle.Text = "📈 PREVISÃO DE MOVIMENTO"
     predictionTitle.TextColor3 = Colors.TextDim
     predictionTitle.TextSize = 18
     predictionTitle.Font = Enum.Font.GothamBold
@@ -1730,7 +1432,7 @@ local function CreateUI()
     y = y + 5
 
     if Config.PredictionEnabled then
-        y = y + createSlider(contentFrame, y, "Intensidade", "PredictionAmount", 0, 100, 15, "%")
+        y = y + createSlider(contentFrame, y, "Intensidade da Previsão", "PredictionAmount", 0, 100, 15, "%")
         y = y + 5
     end
 
@@ -1746,259 +1448,169 @@ local function CreateUI()
     visualTitle.TextXAlignment = Enum.TextXAlignment.Left
     y = y + 45
 
-    y = y + createToggle(contentFrame, y, "Mostrar FOV", "ShowFOV", true)
+    y = y + createToggle(contentFrame, y, "Mostrar Círculo FOV", "ShowFOV", true)
     y = y + 5
 
     if Config.ShowFOV then
-        y = y + createToggle(contentFrame, y, "🌈 FOV Arco-Íris", "RainbowFOV", true)
+        y =     y = y + createToggle(contentFrame, y, "🌈 FOV Arco-Íris", "RainbowFOV", true)
+    y = y + 5
+end
+
+y = y + createToggle(contentFrame, y, "⚪ Mostrar Hitbox", "ShowHitbox", false)
+y = y + 5
+y = y + createToggle(contentFrame, y, "📏 Mostrar Distância", "ShowDistance", true)
+y = y + 5
+y = y + createToggle(contentFrame, y, "❤️ Mostrar Vida", "ShowHealth", true)
+y = y + 5
+y = y + createToggle(contentFrame, y, "📊 Mostrar Status na Tela", "ShowStatus", true)
+y = y + 5
+y = y + createToggle(contentFrame, y, "🧭 Mostrar Direção do Alvo", "ShowDirection", false)
+y = y + 5
+y = y + createToggle(contentFrame, y, "🔫 Mostrar Arma", "ShowWeapon", true)
+y = y + 5
+
+-- ===== ESP =====
+local espTitle = Instance.new("TextLabel", contentFrame)
+espTitle.Size = UDim2.new(1, -20, 0, 40)
+espTitle.Position = UDim2.new(0, 10, 0, y)
+espTitle.BackgroundTransparency = 1
+espTitle.Text = "👁️ ESP"
+espTitle.TextColor3 = Colors.Text
+espTitle.TextSize = 24
+espTitle.Font = Enum.Font.GothamBold
+espTitle.TextXAlignment = Enum.TextXAlignment.Left
+y = y + 45
+
+if not DrawingSupported then
+    local warning = Instance.new("TextLabel", contentFrame)
+    warning.Size = UDim2.new(1, -20, 0, 30)
+    warning.Position = UDim2.new(0, 10, 0, y)
+    warning.BackgroundTransparency = 1
+    warning.Text = "⚠️ Seu executor não suporta ESP (Drawing)"
+    warning.TextColor3 = Colors.Danger
+    warning.TextSize = 14
+    warning.Font = Enum.Font.Gotham
+    warning.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 35
+end
+
+y = y + createToggle(contentFrame, y, "Ativar ESP", "ESPActive", true)
+y = y + 5
+
+if Config.ESPActive then
+    y = y + createToggle(contentFrame, y, "Mostrar Caixa", "ESPBox", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Nome", "ESPName", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Barra de Vida", "ESPHealthBar", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Vida (Texto)", "ESPHealthText", true)
+    y = y + 5
+    
+    if Config.ESPHealthText then
+        y = y + createToggle(contentFrame, y, "Mostrar Porcentagem", "ESPPercent", true)
         y = y + 5
     end
     
-    y = y + createToggle(contentFrame, y, "⚪ Hitbox", "ShowHitbox", false)
+    y = y + createToggle(contentFrame, y, "Mostrar Distância", "ESPDistance", true)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "📏 Distância", "ShowDistance", true)
+    y = y + createToggle(contentFrame, y, "Mostrar Arma", "ESPWeapon", true)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "❤️ Vida", "ShowHealth", true)
+    y = y + createToggle(contentFrame, y, "Usar Cor do Time", "ESPTeamColor", true)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "📊 Status", "ShowStatus", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "🧭 Direção", "ShowDirection", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "🔫 Arma", "ShowWeapon", true)
-    y = y + 5
-
-    -- ===== ESP COMPLETO =====
-    local espTitle = Instance.new("TextLabel", contentFrame)
-    espTitle.Size = UDim2.new(1, -20, 0, 40)
-    espTitle.Position = UDim2.new(0, 10, 0, y)
-    espTitle.BackgroundTransparency = 1
-    espTitle.Text = "👁️ ESP COMPLETO"
-    espTitle.TextColor3 = Colors.Text
-    espTitle.TextSize = 24
-    espTitle.Font = Enum.Font.GothamBold
-    espTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    if not DrawingSupported then
-        local warning = Instance.new("TextLabel", contentFrame)
-        warning.Size = UDim2.new(1, -20, 0, 30)
-        warning.Position = UDim2.new(0, 10, 0, y)
-        warning.BackgroundTransparency = 1
-        warning.Text = "⚠️ ESP não suportado"
-        warning.TextColor3 = Colors.Danger
-        warning.TextSize = 14
-        warning.Font = Enum.Font.Gotham
-        warning.TextXAlignment = Enum.TextXAlignment.Left
-        y = y + 35
-    end
-
-    y = y + createToggle(contentFrame, y, "Ativar ESP", "ESPActive", true)
-    y = y + 5
-
-    if Config.ESPActive then
-        y = y + createToggle(contentFrame, y, "Caixa", "ESPBox", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Corner Box", "CornerBox", false)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Nome", "ESPName", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Barra de Vida", "ESPHealthBar", false)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Vida Texto", "ESPHealthText", true)
-        y = y + 5
-        
-        if Config.ESPHealthText then
-            y = y + createToggle(contentFrame, y, "Mostrar %", "ESPPercent", true)
-            y = y + 5
-        end
-        
-        y = y + createToggle(contentFrame, y, "Distância", "ESPDistance", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Arma", "ESPWeapon", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Head Dot", "HeadDot", false)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Tracers", "Tracers", false)
-        y = y + 5
-        
-        if Config.Tracers then
-            y = y + createDropdown(contentFrame, y, "Tracer Origin", "TracerOrigin", {"Center", "Bottom"}, "Bottom")
-            y = y + 5
-        end
-        
-        y = y + createToggle(contentFrame, y, "Cor do Time", "ESPTeamColor", true)
-        y = y + 5
-        y = y + createSlider(contentFrame, y, "Glow Intensity", "GlowIntensity", 0, 100, 50, "")
-        y = y + 5
-        y = y + createSlider(contentFrame, y, "Opacity", "Opacity", 0, 100, 80, "%")
-    end
-
-    -- ===== MOVIMENTO =====
-    local moveTitle = Instance.new("TextLabel", contentFrame)
-    moveTitle.Size = UDim2.new(1, -20, 0, 40)
-    moveTitle.Position = UDim2.new(0, 10, 0, y)
-    moveTitle.BackgroundTransparency = 1
-    moveTitle.Text = "🏃 MOVIMENTO"
-    moveTitle.TextColor3 = Colors.Text
-    moveTitle.TextSize = 24
-    moveTitle.Font = Enum.Font.GothamBold
-    moveTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    y = y + createToggle(contentFrame, y, "Speed Toggle", "SpeedToggle", false)
-    y = y + 5
-    y = y + createSlider(contentFrame, y, "Speed Multiplier", "SpeedMultiplier", 10, 100, 50, "")
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Safe Mode", "SafeMode", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Strafe Assist", "StrafeAssist", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Infinite Jump", "InfiniteJump", false)
-    y = y + 5
-    y = y + createSlider(contentFrame, y, "Jump Height", "JumpHeight", 10, 100, 50, "")
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Jump Boost", "JumpBoost", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Fly Mode", "FlyMode", false)
-    y = y + 5
-    y = y + createSlider(contentFrame, y, "Fly Speed", "FlySpeed", 10, 200, 50, "")
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "No Clip", "NoClip", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Bhop Assist", "BhopAssist", false)
-    y = y + 5
-
-    -- ===== MISC =====
-    local miscTitle = Instance.new("TextLabel", contentFrame)
-    miscTitle.Size = UDim2.new(1, -20, 0, 40)
-    miscTitle.Position = UDim2.new(0, 10, 0, y)
-    miscTitle.BackgroundTransparency = 1
-    miscTitle.Text = "⚙️ MISC"
-    miscTitle.TextColor3 = Colors.Text
-    miscTitle.TextSize = 24
-    miscTitle.Font = Enum.Font.GothamBold
-    miscTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    y = y + createToggle(contentFrame, y, "Anti AFK", "AntiAFK", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Auto Reload", "AutoReload", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Auto Respawn", "AutoRespawn", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Chat Filter", "ChatFilter", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "FPS Counter", "FPS", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Watermark", "Watermark", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Keybind List", "KeybindList", false)
-    y = y + 5
-        y = y + createDropdown(contentFrame, y, "Theme Mode", "ThemeMode", {"Dark", "Light"}, "Dark")
-    y = y + 5
-    y = y + createDropdown(contentFrame, y, "Radar Mode", "RadarMode", {"Static", "Dynamic", "None"}, "Static")
-    y = y + 5
-    y = y + createDropdown(contentFrame, y, "Radar Size", "RadarSize", {"Small", "Medium", "Large"}, "Small")
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Show Radar", "ShowRadar", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Save Config", "ConfigSave", false)
-    y = y + 5
-
-    -- EXTRAS
-    local extrasTitle = Instance.new("TextLabel", contentFrame)
-    extrasTitle.Size = UDim2.new(1, -20, 0, 40)
-    extrasTitle.Position = UDim2.new(0, 10, 0, y)
-    extrasTitle.BackgroundTransparency = 1
-    extrasTitle.Text = "⚙️ EXTRAS"
-    extrasTitle.TextColor3 = Colors.Text
-    extrasTitle.TextSize = 24
-    extrasTitle.Font = Enum.Font.GothamBold
-    extrasTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    y = y + createToggle(contentFrame, y, "FPS no Menu", "FPSCounter", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "FPS Booster", "FPSBooster", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Remover Pontos Verdes", "RemoveGreenDots", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
-    y = y + 5
-
-    -- CRÉDITO
-    local credit = Instance.new("TextLabel", contentFrame)
-    credit.Size = UDim2.new(1, -20, 0, 40)
-    credit.Position = UDim2.new(0, 10, 0, y)
-    credit.BackgroundTransparency = 1
-    credit.Text = "✨ ectorstuffo ✨"
-    credit.TextColor3 = Colors.Primary
-    credit.TextSize = 18
-    credit.Font = Enum.Font.GothamBold
-    credit.TextXAlignment = Enum.TextXAlignment.Center
-    y = y + 45
-
-    -- BARRA COMPACTA
-    local topBar = Instance.new("Frame", UI)
-    topBar.Size = UDim2.new(0, 300, 0, 50)
-    topBar.Position = UDim2.new(0.5, -150, 0.3, 0)
-    topBar.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
-    topBar.BorderSizePixel = 0
-    topBar.Active = true
-    topBar.Draggable = true
-
-    local topBarCorner = Instance.new("UICorner", topBar)
-    topBarCorner.CornerRadius = UDim.new(0, 14)
-
-    local topBarStroke = Instance.new("UIStroke", topBar)
-    topBarStroke.Color = Color3.fromRGB(220, 220, 220)
-    topBarStroke.Thickness = 1
-
-    local topBarTitle = Instance.new("TextLabel", topBar)
-    topBarTitle.Size = UDim2.new(0.6, 0, 1, 0)
-    topBarTitle.Position = UDim2.new(0, 15, 0, 0)
-    topBarTitle.BackgroundTransparency = 1
-    topBarTitle.Text = "zk hub"
-    topBarTitle.TextColor3 = Color3.fromRGB(40, 40, 40)
-    topBarTitle.TextSize = 20
-    topBarTitle.Font = Enum.Font.GothamBold
-    topBarTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-    local topBarOpenBtn = Instance.new("TextButton", topBar)
-    topBarOpenBtn.Size = UDim2.new(0, 35, 0, 35)
-    topBarOpenBtn.Position = UDim2.new(1, -80, 0.5, -17.5)
-    topBarOpenBtn.BackgroundTransparency = 1
-    topBarOpenBtn.Text = "+"
-    topBarOpenBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-    topBarOpenBtn.TextSize = 26
-    topBarOpenBtn.Font = Enum.Font.GothamBold
-
-    local topBarCloseBtn = Instance.new("TextButton", topBar)
-    topBarCloseBtn.Size = UDim2.new(0, 35, 0, 35)
-    topBarCloseBtn.Position = UDim2.new(1, -40, 0.5, -17.5)
-    topBarCloseBtn.BackgroundTransparency = 1
-    topBarCloseBtn.Text = "×"
-    topBarCloseBtn.TextColor3 = Color3.fromRGB(120, 120, 120)
-    topBarCloseBtn.TextSize = 26
-    topBarCloseBtn.Font = Enum.Font.GothamBold
-
-    topBarOpenBtn.MouseButton1Click:Connect(function()
-        mainFrame.Visible = not mainFrame.Visible
-    end)
-
-    topBarCloseBtn.MouseButton1Click:Connect(function()
-        UI:Destroy()
-        ClearESP()
-        if FPSBoosterActive then
-            ApplyFPSBooster(false)
-        end
-    end)
 end
+
+-- ===== EXTRAS =====
+local extrasTitle = Instance.new("TextLabel", contentFrame)
+extrasTitle.Size = UDim2.new(1, -20, 0, 40)
+extrasTitle.Position = UDim2.new(0, 10, 0, y)
+extrasTitle.BackgroundTransparency = 1
+extrasTitle.Text = "⚙️ EXTRAS"
+extrasTitle.TextColor3 = Colors.Text
+extrasTitle.TextSize = 24
+extrasTitle.Font = Enum.Font.GothamBold
+extrasTitle.TextXAlignment = Enum.TextXAlignment.Left
+y = y + 45
+
+y = y + createToggle(contentFrame, y, "Mostrar FPS no Menu", "FPSCounter", true)
+y = y + 5
+y = y + createToggle(contentFrame, y, "FPS Booster", "FPSBooster", false)
+y = y + 5
+y = y + createToggle(contentFrame, y, "Remover Pontos Verdes", "RemoveGreenDots", true)
+y = y + 5
+y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
+y = y + 5
+
+-- CRÉDITO
+local credit = Instance.new("TextLabel", contentFrame)
+credit.Size = UDim2.new(1, -20, 0, 40)
+credit.Position = UDim2.new(0, 10, 0, y)
+credit.BackgroundTransparency = 1
+credit.Text = "✨ ZK HUB OFICIAL ✨"
+credit.TextColor3 = Colors.Primary
+credit.TextSize = 16
+credit.Font = Enum.Font.GothamBold
+credit.TextXAlignment = Enum.TextXAlignment.Center
+y = y + 45
+
+-- BARRA COMPACTA
+local topBar = Instance.new("Frame", UI)
+topBar.Size = UDim2.new(0, 300, 0, 50)
+topBar.Position = UDim2.new(0.5, -150, 0.3, 0)
+topBar.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+topBar.BorderSizePixel = 0
+topBar.Active = true
+topBar.Draggable = true
+
+local topBarCorner = Instance.new("UICorner", topBar)
+topBarCorner.CornerRadius = UDim.new(0, 14)
+
+local topBarStroke = Instance.new("UIStroke", topBar)
+topBarStroke.Color = Color3.fromRGB(220, 220, 220)
+topBarStroke.Thickness = 1
+
+local topBarTitle = Instance.new("TextLabel", topBar)
+topBarTitle.Size = UDim2.new(0.6, 0, 1, 0)
+topBarTitle.Position = UDim2.new(0, 15, 0, 0)
+topBarTitle.BackgroundTransparency = 1
+topBarTitle.Text = "ZK HUB"
+topBarTitle.TextColor3 = Color3.fromRGB(40, 40, 40)
+topBarTitle.TextSize = 20
+topBarTitle.Font = Enum.Font.GothamBold
+topBarTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local topBarOpenBtn = Instance.new("TextButton", topBar)
+topBarOpenBtn.Size = UDim2.new(0, 35, 0, 35)
+topBarOpenBtn.Position = UDim2.new(1, -80, 0.5, -17.5)
+topBarOpenBtn.BackgroundTransparency = 1
+topBarOpenBtn.Text = "+"
+topBarOpenBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+topBarOpenBtn.TextSize = 26
+topBarOpenBtn.Font = Enum.Font.GothamBold
+
+local topBarCloseBtn = Instance.new("TextButton", topBar)
+topBarCloseBtn.Size = UDim2.new(0, 35, 0, 35)
+topBarCloseBtn.Position = UDim2.new(1, -40, 0.5, -17.5)
+topBarCloseBtn.BackgroundTransparency = 1
+topBarCloseBtn.Text = "×"
+topBarCloseBtn.TextColor3 = Color3.fromRGB(120, 120, 120)
+topBarCloseBtn.TextSize = 26
+topBarCloseBtn.Font = Enum.Font.GothamBold
+
+topBarOpenBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
+
+topBarCloseBtn.MouseButton1Click:Connect(function()
+    UI:Destroy()
+    ClearESP()
+    if FPSBoosterActive then
+        ApplyFPSBooster(false)
+    end
+end)
+    end
+end)
 
 -- ========== INICIAR ==========
 CreateUI()
-Notify("ZK HUB v7.5 • NOVAS OPÇÕES ADICIONADAS")
-
-
-
-            
+Notify("ZK HUB v8.0 • AIMBOT PROFISSIONAL")
