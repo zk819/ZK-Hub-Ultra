@@ -3,7 +3,7 @@
 -- CRIADO POR ECTORSTUFFO
 -- ============================================
 
--- Serviços
+-- ========== SERVIÇOS ==========
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -86,7 +86,7 @@ local Config = {
     RemoveGreenDots = true
 }
 
--- ========== VARIÁVEIS ==========
+-- ========== VARIÁVEIS GLOBAIS ==========
 local FOVCircle = nil
 local UI = nil
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -99,10 +99,7 @@ local DirectionArrows = {}
 local FPSBoosterActive = false
 local OriginalSettings = {}
 local WatermarkText = nil
-
--- ========== SUPORTE A DRAWING ==========
 local DrawingSupported = pcall(Drawing.new, "Square")
-
 -- ========== NOTIFICAÇÃO ==========
 local function Notify(msg)
     if Config.Notifications then
@@ -132,115 +129,6 @@ local function UpdateWatermark()
         if WatermarkText then
             WatermarkText.Visible = false
             WatermarkText = nil
-        end
-    end
-end
-
--- ========== ATUALIZAR FOV ==========
-local hue = 0
-local function UpdateFOV()
-    if not Config.ShowFOV or not Config.AimbotActive then
-        if FOVCircle then FOVCircle:Destroy(); FOVCircle = nil end
-        return
-    end
-
-    if not FOVCircle then
-        FOVCircle = Instance.new("ScreenGui")
-        FOVCircle.Name = "ZKFOV"
-        FOVCircle.Parent = CoreGui
-        FOVCircle.ResetOnSpawn = false
-        FOVCircle.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        FOVCircle.DisplayOrder = 999
-
-        local circle = Instance.new("Frame")
-        circle.Name = "Circle"
-        circle.BackgroundTransparency = 1
-        circle.BorderSizePixel = 0
-        circle.Parent = FOVCircle
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(1, 0)
-        corner.Parent = circle
-
-        local stroke = Instance.new("UIStroke")
-        stroke.Thickness = 2
-        stroke.Transparency = 0.3
-        stroke.Parent = circle
-    end
-
-    local circle = FOVCircle:FindFirstChild("Circle")
-    if circle then
-        if Config.RainbowFOV then
-            hue = (hue + 0.005) % 1
-            circle.UIStroke.Color = Color3.fromHSV(hue, 1, 1)
-        else
-            circle.UIStroke.Color = Config.FOVColor
-        end
-
-        local size = Config.AimbotFOV * 2
-        circle.Size = UDim2.new(0, size, 0, size)
-        circle.Position = UDim2.new(0.5, -Config.AimbotFOV, 0.5, -Config.AimbotFOV)
-    end
-end
-RunService.RenderStepped:Connect(UpdateFOV)
-
--- ========== STATUS DO AIMBOT ==========
-local function UpdateStatus()
-    if Config.ShowStatus then
-        if not StatusText then
-            StatusText = Drawing.new("Text")
-            StatusText.Visible = true
-            StatusText.Size = 14
-            StatusText.Center = false
-            StatusText.Outline = true
-            StatusText.Position = Vector2.new(10, Camera.ViewportSize.Y - 30)
-        end
-        
-        local status = "⚡ AIMBOT: "
-        if Config.AimbotActive then
-            if Config.RageMode then
-                status = status .. "RAGE"
-            else
-                status = status .. "ATIVO"
-            end
-            
-            if CurrentTarget then
-                status = status .. " | 🎯 " .. (CurrentTarget.Model.Name or "Alvo")
-                
-                local humanoid = CurrentTarget.Model:FindFirstChild("Humanoid")
-                if humanoid and humanoid.Health > 0 then
-                    if Config.ShowHealth then
-                        local health = math.floor(humanoid.Health)
-                        local maxHealth = math.floor(humanoid.MaxHealth)
-                        local percent = math.floor((health / maxHealth) * 100)
-                        status = status .. string.format(" | ❤️ %d/%d (%d%%)", health, maxHealth, percent)
-                    end
-                end
-                
-                if Config.ShowDistance then
-                    local dist = (Camera.CFrame.Position - CurrentTarget.Part.Position).Magnitude
-                    status = status .. string.format(" | 📏 %.0fm", dist)
-                end
-            else
-                status = status .. " | 🔍 BUSCANDO..."
-            end
-        else
-            status = status .. "DESATIVADO"
-        end
-        
-        StatusText.Text = status
-        
-        if Config.AimbotActive and CurrentTarget then
-            StatusText.Color = Colors.Success
-        elseif Config.AimbotActive then
-            StatusText.Color = Colors.Warning
-        else
-            StatusText.Color = Colors.Danger
-        end
-    else
-        if StatusText then
-            StatusText.Visible = false
-            StatusText = nil
         end
     end
 end
@@ -307,7 +195,114 @@ local function ApplyFPSBooster(enable)
     end
 end
 
--- ========== DETECTAR INIMIGOS ==========
+-- ========== ATUALIZAR FOV ==========
+local hue = 0
+local function UpdateFOV()
+    if not Config.ShowFOV or not Config.AimbotActive then
+        if FOVCircle then FOVCircle:Destroy(); FOVCircle = nil end
+        return
+    end
+
+    if not FOVCircle then
+        FOVCircle = Instance.new("ScreenGui")
+        FOVCircle.Name = "ZKFOV"
+        FOVCircle.Parent = CoreGui
+        FOVCircle.ResetOnSpawn = false
+        FOVCircle.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        FOVCircle.DisplayOrder = 999
+
+        local circle = Instance.new("Frame")
+        circle.Name = "Circle"
+        circle.BackgroundTransparency = 1
+        circle.BorderSizePixel = 0
+        circle.Parent = FOVCircle
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = circle
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = 2
+        stroke.Transparency = 0.3
+        stroke.Parent = circle
+    end
+
+    local circle = FOVCircle:FindFirstChild("Circle")
+    if circle then
+        if Config.RainbowFOV then
+            hue = (hue + 0.005) % 1
+            circle.UIStroke.Color = Color3.fromHSV(hue, 1, 1)
+        else
+            circle.UIStroke.Color = Config.FOVColor
+        end
+
+        local size = Config.AimbotFOV * 2
+        circle.Size = UDim2.new(0, size, 0, size)
+        circle.Position = UDim2.new(0.5, -Config.AimbotFOV, 0.5, -Config.AimbotFOV)
+    end
+end
+
+-- ========== STATUS DO AIMBOT ==========
+local function UpdateStatus()
+    if Config.ShowStatus then
+        if not StatusText then
+            StatusText = Drawing.new("Text")
+            StatusText.Visible = true
+            StatusText.Size = 14
+            StatusText.Center = false
+            StatusText.Outline = true
+            StatusText.Position = Vector2.new(10, Camera.ViewportSize.Y - 30)
+        end
+        
+        local status = "⚡ AIMBOT: "
+        if Config.AimbotActive then
+            if Config.RageMode then
+                status = status .. "RAGE"
+            else
+                status = status .. "ATIVO"
+            end
+            
+            if CurrentTarget then
+                status = status .. " | 🎯 " .. (CurrentTarget.Model.Name or "Alvo")
+                
+                local humanoid = CurrentTarget.Model:FindFirstChild("Humanoid")
+                if humanoid and humanoid.Health > 0 then
+                    if Config.ShowHealth then
+                        local health = math.floor(humanoid.Health)
+                        local maxHealth = math.floor(humanoid.MaxHealth)
+                        local percent = math.floor((health / maxHealth) * 100)
+                        status = status .. string.format(" | ❤️ %d/%d (%d%%)", health, maxHealth, percent)
+                    end
+                end
+                
+                if Config.ShowDistance then
+                    local dist = (Camera.CFrame.Position - CurrentTarget.Part.Position).Magnitude
+                    status = status .. string.format(" | 📏 %.0fm", dist)
+                end
+            else
+                status = status .. " | 🔍 BUSCANDO..."
+            end
+        else
+            status = status .. "DESATIVADO"
+        end
+        
+        StatusText.Text = status
+        
+        if Config.AimbotActive and CurrentTarget then
+            StatusText.Color = Colors.Success
+        elseif Config.AimbotActive then
+            StatusText.Color = Colors.Warning
+        else
+            StatusText.Color = Colors.Danger
+        end
+    else
+        if StatusText then
+            StatusText.Visible = false
+            StatusText = nil
+        end
+    end
+end
+-- ========== DETECÇÃO DE INIMIGOS ==========
 local function IsEnemy(model)
     if not model then return false end
     if model == LocalPlayer.Character then return false end
@@ -454,26 +449,9 @@ local function AimAtTarget(target)
         Camera.CFrame = CFrame.lookAt(cameraPos, cameraPos + newLook)
     end
 end
+-- ========== FUNÇÕES DE DESENHO ==========
 
-RunService.RenderStepped:Connect(function()
-    if Config.AimbotActive then
-        local target = GetBestTarget()
-        CurrentTarget = target
-        if target then
-            AimAtTarget(target)
-        else
-            CurrentTarget = nil
-        end
-    else
-        CurrentTarget = nil
-    end
-    
-    UpdateFOV()
-    UpdateStatus()
-    UpdateESP()
-end)
-
--- ========== FUNÇÃO PARA COR DA VIDA ==========
+-- Cor da vida
 local function GetHealthColor(health, maxHealth)
     local percent = health / maxHealth
     if percent > 0.6 then
@@ -485,7 +463,7 @@ local function GetHealthColor(health, maxHealth)
     end
 end
 
--- ========== ESP ==========
+-- Limpar ESP
 local function ClearESP()
     for _, drawing in pairs(ESPDrawings) do
         for _, d in pairs(drawing) do
@@ -500,6 +478,7 @@ local function ClearESP()
     HitboxDrawings = {}
 end
 
+-- Nome da arma
 local function GetWeaponName(model)
     local tool = model:FindFirstChildOfClass("Tool")
     if tool then
@@ -508,6 +487,7 @@ local function GetWeaponName(model)
     return "?"
 end
 
+-- Atualizar ESP
 local function UpdateESP()
     if not Config.ESPActive or not DrawingSupported then
         ClearESP()
@@ -583,7 +563,7 @@ local function UpdateESP()
                 end
             end
 
-            -- HITBOX
+            -- HITBOX (círculo no centro)
             if Config.ShowHitbox then
                 if not esp.Hitbox then
                     local circle = Drawing.new("Circle")
@@ -647,6 +627,10 @@ local function UpdateESP()
                 
                 healthLabel.Color = GetHealthColor(health, maxHealth)
                 healthLabel.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight/2 - 2)
+            else
+                if esp.HealthText then
+                    esp.HealthText.Visible = false
+                end
             end
 
             -- DISTÂNCIA
@@ -666,6 +650,10 @@ local function UpdateESP()
                 distLabel.Visible = true
                 distLabel.Text = string.format("📏 %.0fm", distance)
                 distLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 2)
+            else
+                if esp.Dist then
+                    esp.Dist.Visible = false
+                end
             end
             
             -- ARMA
@@ -685,17 +673,16 @@ local function UpdateESP()
                 weaponLabel.Visible = true
                 weaponLabel.Text = "🔫 " .. weaponName
                 weaponLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 18)
+            else
+                if esp.Weapon then
+                    esp.Weapon.Visible = false
+                end
             end
         else
             if ESPDrawings[model] then
                 for _, d in pairs(ESPDrawings[model]) do
                     if d and d.Visible ~= nil then
-                        if type(d) == "table" and d.Bg and d.Fill then
-                            d.Bg.Visible = false
-                            d.Fill.Visible = false
-                        else
-                            d.Visible = false
-                        end
+                        d.Visible = false
                     end
                 end
             end
@@ -703,9 +690,113 @@ local function UpdateESP()
     end
 end
 
+-- Atualizar Hitbox (círculo no alvo atual)
+local function UpdateHitbox()
+    if not Config.ShowHitbox or not DrawingSupported then
+        for _, d in pairs(HitboxDrawings) do
+            pcall(function() d:Remove() end)
+        end
+        HitboxDrawings = {}
+        return
+    end
+
+    for model, circle in pairs(HitboxDrawings) do
+        local humanoid = model and model:FindFirstChild("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then
+            pcall(function() circle:Remove() end)
+            HitboxDrawings[model] = nil
+        end
+    end
+
+    if CurrentTarget and CurrentTarget.Part then
+        local model = CurrentTarget.Model
+        local part = CurrentTarget.Part
+        local humanoid = model and model:FindFirstChild("Humanoid")
+        
+        if humanoid and humanoid.Health > 0 then
+            local pos, vis = Camera:WorldToViewportPoint(part.Position)
+            if vis then
+                if not HitboxDrawings[model] then
+                    local circle = Drawing.new("Circle")
+                    circle.Visible = true
+                    circle.Thickness = 2
+                    circle.NumSides = 30
+                    circle.Filled = false
+                    circle.Radius = 12
+                    HitboxDrawings[model] = circle
+                end
+
+                local circle = HitboxDrawings[model]
+                circle.Position = Vector2.new(pos.X, pos.Y)
+                
+                local healthPercent = humanoid.Health / humanoid.MaxHealth
+                if healthPercent > 0.6 then
+                    circle.Color = Colors.HealthGreen
+                elseif healthPercent > 0.3 then
+                    circle.Color = Colors.HealthYellow
+                else
+                    circle.Color = Colors.HealthRed
+                end
+                
+                circle.Visible = true
+            else
+                if HitboxDrawings[model] then
+                    HitboxDrawings[model].Visible = false
+                end
+            end
+        else
+            if HitboxDrawings[model] then
+                HitboxDrawings[model].Visible = false
+            end
+        end
+    end
+end
+
+-- Atualizar Direção do Alvo (seta)
+local function UpdateDirection()
+    if Config.ShowDirection and CurrentTarget and CurrentTarget.Part then
+        local model = CurrentTarget.Model
+        local humanoid = model:FindFirstChild("Humanoid")
+        local root = model:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and root and humanoid.MoveDirection.Magnitude > 0 then
+            local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+            if onScreen then
+                if not DirectionArrows[model] then
+                    local arrow = Drawing.new("Triangle")
+                    arrow.Visible = false
+                    arrow.Color = Colors.Primary
+                    arrow.Thickness = 2
+                    arrow.Filled = false
+                    DirectionArrows[model] = arrow
+                end
+                
+                local dir = humanoid.MoveDirection * 3
+                local arrow = DirectionArrows[model]
+                arrow.Visible = true
+                arrow.PointA = Vector2.new(screenPos.X + dir.X, screenPos.Y + dir.Z - 20)
+                arrow.PointB = Vector2.new(screenPos.X - 5, screenPos.Y - 15)
+                arrow.PointC = Vector2.new(screenPos.X + 5, screenPos.Y - 15)
+            else
+                if DirectionArrows[model] then
+                    DirectionArrows[model].Visible = false
+                end
+            end
+        else
+            if DirectionArrows[model] then
+                DirectionArrows[model].Visible = false
+            end
+        end
+    else
+        for _, arrow in pairs(DirectionArrows) do
+            if arrow then
+                arrow.Visible = false
+            end
+        end
+    end
+end
 -- ========== LOOP PRINCIPAL ==========
 RunService.RenderStepped:Connect(function()
-    -- Aimbot
     if Config.AimbotActive then
         local target = GetBestTarget()
         CurrentTarget = target
@@ -718,27 +809,23 @@ RunService.RenderStepped:Connect(function()
         CurrentTarget = nil
     end
     
-    -- Funções visuais
     UpdateFOV()
-    if Config.ShowHitbox then
-        UpdateHitbox()
-    end
-    if Config.ShowDirection then
-        UpdateDirection()
-    end
     UpdateStatus()
     UpdateESP()
+    UpdateHitbox()
+    UpdateDirection()
 end)
+-- ========== FUNÇÕES DE INTERFACE (UI) ==========
 
--- ========== FUNÇÕES UI ==========
+-- Função para criar toggle (ligar/desligar)
 local function createToggle(parent, y, text, var, default)
     Config[var] = default
-
+    
     local frame = Instance.new("Frame", parent)
     frame.Size = UDim2.new(1, -20, 0, 35)
     frame.Position = UDim2.new(0, 10, 0, y)
     frame.BackgroundTransparency = 1
-
+    
     local lbl = Instance.new("TextLabel", frame)
     lbl.Text = text
     lbl.Size = UDim2.new(0.7, 0, 1, 0)
@@ -748,47 +835,47 @@ local function createToggle(parent, y, text, var, default)
     lbl.TextSize = 14
     lbl.Font = Enum.Font.Gotham
     lbl.TextXAlignment = Enum.TextXAlignment.Left
-
+    
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0, 60, 0, 22)
     btn.Position = UDim2.new(1, -70, 0.5, -11)
+    btn.BackgroundColor3 = Colors.Inactive
     btn.TextColor3 = Colors.Text
     btn.TextSize = 14
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
-
+    
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 5)
-
+    
     local function updateToggleVisual()
         btn.BackgroundColor3 = Config[var] and Colors.Success or Colors.Inactive
         btn.Text = Config[var] and "ON" or "OFF"
     end
-
     updateToggleVisual()
-
+    
     btn.MouseButton1Click:Connect(function()
         Config[var] = not Config[var]
         updateToggleVisual()
-        Notify(text .. " " .. (Config[var] and "ON" or "OFF"))
-
+        Notify(text .. ": " .. (Config[var] and "ON" or "OFF"))
         if var == "FPSBooster" then
             ApplyFPSBooster(Config[var])
         end
     end)
-
+    
     return 35
 end
 
+-- Função para criar slider (controle deslizante)
 local function createSlider(parent, y, text, var, min, max, default, suffix)
     Config[var] = default
-
+    
     local frame = Instance.new("Frame", parent)
     frame.Size = UDim2.new(1, -20, 0, 50)
     frame.Position = UDim2.new(0, 10, 0, y)
     frame.BackgroundTransparency = 1
-
+    
     local lbl = Instance.new("TextLabel", frame)
     lbl.Text = text
     lbl.Size = UDim2.new(0.5, 0, 0, 20)
@@ -798,39 +885,39 @@ local function createSlider(parent, y, text, var, min, max, default, suffix)
     lbl.TextSize = 14
     lbl.Font = Enum.Font.Gotham
     lbl.TextXAlignment = Enum.TextXAlignment.Left
-
-    local valLbl = Instance.new("TextLabel", frame)
-    valLbl.Size = UDim2.new(0.5, -10, 0, 20)
-    valLbl.Position = UDim2.new(0.5, 0, 0, 0)
-    valLbl.BackgroundTransparency = 1
-    valLbl.Text = tostring(default) .. (suffix or "")
-    valLbl.TextColor3 = Colors.Primary
-    valLbl.TextSize = 14
-    valLbl.Font = Enum.Font.GothamBold
-    valLbl.TextXAlignment = Enum.TextXAlignment.Right
-
+    
+    local vallbl = Instance.new("TextLabel", frame)
+    vallbl.Size = UDim2.new(0.5, -10, 0, 20)
+    vallbl.Position = UDim2.new(0.5, 0, 0, 0)
+    vallbl.BackgroundTransparency = 1
+    vallbl.Text = tostring(default) .. (suffix or "")
+    vallbl.TextColor3 = Colors.Primary
+    vallbl.TextSize = 14
+    vallbl.Font = Enum.Font.GothamBold
+    vallbl.TextXAlignment = Enum.TextXAlignment.Right
+    
     local bg = Instance.new("Frame", frame)
     bg.Size = UDim2.new(1, 0, 0, 8)
     bg.Position = UDim2.new(0, 0, 0, 25)
     bg.BackgroundColor3 = Colors.Inactive
     bg.BorderSizePixel = 0
-
+    
     local bgCorner = Instance.new("UICorner", bg)
     bgCorner.CornerRadius = UDim.new(0, 4)
-
+    
     local fill = Instance.new("Frame", bg)
-    fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
+    fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
     fill.BackgroundColor3 = Colors.Primary
     fill.BorderSizePixel = 0
-
+    
     local fillCorner = Instance.new("UICorner", fill)
     fillCorner.CornerRadius = UDim.new(0, 4)
-
+    
     local sliderBtn = Instance.new("TextButton", bg)
     sliderBtn.Size = UDim2.new(1, 0, 1, 0)
     sliderBtn.BackgroundTransparency = 1
     sliderBtn.Text = ""
-
+    
     local dragging = false
     local function update(input)
         local pos = input.Position
@@ -840,48 +927,51 @@ local function createSlider(parent, y, text, var, min, max, default, suffix)
         local percent = rel / absSize
         local value = math.floor(min + (max - min) * percent)
         Config[var] = value
-        valLbl.Text = tostring(value) .. (suffix or "")
+        vallbl.Text = tostring(value) .. (suffix or "")
         fill.Size = UDim2.new(percent, 0, 1, 0)
     end
-
+    
     sliderBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             update(input)
         end
     end)
+    
     sliderBtn.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             update(input)
         end
     end)
+    
     sliderBtn.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
-
-    return 55
+    
+    return 50
 end
 
+-- Função para criar dropdown (seleção)
 local function createDropdown(parent, y, text, var, options, default)
     Config[var] = default
-
+    
     local frame = Instance.new("Frame", parent)
-    frame.Size = UDim2.new(1, -20, 0, 35)
+    frame.Size = UDim2.new(1, -20, 0, 40)
     frame.Position = UDim2.new(0, 10, 0, y)
     frame.BackgroundTransparency = 1
-
+    
     local lbl = Instance.new("TextLabel", frame)
     lbl.Text = text
-    lbl.Size = UDim2.new(0.5, 0, 1, 0)
+    lbl.Size = UDim2.new(0.5, 0, 0, 20)
     lbl.Position = UDim2.new(0, 0, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.TextColor3 = Colors.Text
     lbl.TextSize = 14
     lbl.Font = Enum.Font.Gotham
     lbl.TextXAlignment = Enum.TextXAlignment.Left
-
+    
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0, 80, 0, 25)
     btn.Position = UDim2.new(1, -90, 0.5, -12.5)
@@ -892,10 +982,10 @@ local function createDropdown(parent, y, text, var, options, default)
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
-
+    
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 5)
-
+    
     local currentIndex = 1
     for i, opt in ipairs(options) do
         if opt == default then
@@ -903,57 +993,57 @@ local function createDropdown(parent, y, text, var, options, default)
             break
         end
     end
-
+    
     btn.MouseButton1Click:Connect(function()
         currentIndex = currentIndex % #options + 1
         Config[var] = options[currentIndex]
         btn.Text = options[currentIndex]
         Notify(text .. ": " .. options[currentIndex])
     end)
-
+    
     return 40
 end
 
+-- Função para criar keybind (definir tecla)
 local function createKeybind(parent, y, text, var, default)
     Config[var] = default
-
+    
     local frame = Instance.new("Frame", parent)
     frame.Size = UDim2.new(1, -20, 0, 40)
     frame.Position = UDim2.new(0, 10, 0, y)
     frame.BackgroundTransparency = 1
-
+    
     local lbl = Instance.new("TextLabel", frame)
     lbl.Text = text
-    lbl.Size = UDim2.new(0.5, 0, 1, 0)
+    lbl.Size = UDim2.new(0.5, 0, 0, 20)
     lbl.Position = UDim2.new(0, 0, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.TextColor3 = Colors.Text
     lbl.TextSize = 14
     lbl.Font = Enum.Font.Gotham
     lbl.TextXAlignment = Enum.TextXAlignment.Left
-
+    
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0, 80, 0, 25)
     btn.Position = UDim2.new(1, -90, 0.5, -12.5)
     btn.BackgroundColor3 = Colors.Inactive
-    btn.Text = default.Name
+    btn.Text = default.Name or "?"
     btn.TextColor3 = Colors.Text
     btn.TextSize = 14
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
-
+    
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 5)
-
+    
     local listening = false
-
     btn.MouseButton1Click:Connect(function()
         listening = true
         btn.Text = "..."
         btn.BackgroundColor3 = Colors.Warning
     end)
-
+    
     UserInputService.InputBegan:Connect(function(input)
         if listening then
             if input.UserInputType == Enum.UserInputType.Keyboard then
@@ -963,7 +1053,8 @@ local function createKeybind(parent, y, text, var, default)
                 listening = false
                 Notify(text .. ": " .. input.KeyCode.Name)
             elseif input.UserInputType == Enum.UserInputType.MouseButton1 or 
-                   input.UserInputType == Enum.UserInputType.MouseButton2 then
+                   input.UserInputType == Enum.UserInputType.MouseButton2 or
+                   input.UserInputType == Enum.UserInputType.MouseButton3 then
                 Config[var] = input.UserInputType
                 btn.Text = input.UserInputType.Name
                 btn.BackgroundColor3 = Colors.Inactive
@@ -972,30 +1063,25 @@ local function createKeybind(parent, y, text, var, default)
             end
         end
     end)
-
-    return 45
+    
+    return 40
 end
-
 -- ========== REMOVER PONTOS VERDES ==========
-local function RemoveGreenDots()
+local function RemoveGreenDotsLoop()
     if not Config.RemoveGreenDots then return end
     
     pcall(function()
         for _, v in ipairs(Workspace:GetDescendants()) do
-            if v:IsA("BillboardGui") then
-                v.Enabled = false
+            if v:IsA("BillboardGui") and v.Name == "Player" then
                 v:Destroy()
             end
-            
             if v:IsA("BasePart") then
-                if v.BrickColor == BrickColor.new("Lime green") or 
-                   v.BrickColor == BrickColor.new("Bright green") then
+                if v.BrickColor == BrickColor.new("Lime green") or v.BrickColor == BrickColor.new("Bright green") then
                     v.Transparency = 1
                 end
             end
-            
             local name = v.Name:lower()
-            if name:find("point") or name:find("marker") or name:find("dot") or name:find("aim") then
+            if name:find("point") or name:find("marker") then
                 if v:IsA("BasePart") then
                     v.Transparency = 1
                 elseif v:IsA("Model") then
@@ -1008,397 +1094,22 @@ end
 
 spawn(function()
     while wait(0.5) do
-        RemoveGreenDots()
+        RemoveGreenDotsLoop()
     end
 end)
 
--- ========== INTERFACE PRINCIPAL ==========
-local function CreateUI()
-    pcall(function()
-        local old = playerGui:FindFirstChild("ZkHub")
-        if old then old:Destroy() end
-    end)
-
-    RunService.Heartbeat:Wait()
-
+-- ========== CONSTRUIR INTERFACE PRINCIPAL ==========
+local function BuildUI()
+    if UI then UI:Destroy() end
+    
     UI = Instance.new("ScreenGui")
-    UI.Name = "ZkHub"
-    UI.Parent = playerGui
+    UI.Name = "ZKHub"
+    UI.Parent = CoreGui
     UI.ResetOnSpawn = false
     UI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     UI.DisplayOrder = 1000
 
-    -- FRAME PRINCIPAL
-    local mainFrame = Instance.new("Frame", UI)
-    mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 450, 0, 650)
-    mainFrame.Position = UDim2.new(0.5, -225, 0.5, -325)
-    mainFrame.BackgroundColor3 = Colors.Background
-    mainFrame.Active = true
-    mainFrame.Draggable = true
-    mainFrame.Visible = false
-
-    local frameCorner = Instance.new("UICorner", mainFrame)
-    frameCorner.CornerRadius = UDim.new(0, 15)
-
-    -- CABEÇALHO
-    local header = Instance.new("Frame", mainFrame)
-    header.Size = UDim2.new(1, 0, 0, 60)
-    header.BackgroundColor3 = Colors.Surface
-
-    local headerCorner = Instance.new("UICorner", header)
-    headerCorner.CornerRadius = UDim.new(0, 15)
-
-    local title = Instance.new("TextLabel", header)
-    title.Size = UDim2.new(1, -50, 0.6, 0)
-    title.Position = UDim2.new(0, 15, 0, 5)
-    title.BackgroundTransparency = 1
-    title.Text = "🎯 ZK HUB"
-    title.TextColor3 = Colors.Text
-    title.TextSize = 26
-    title.Font = Enum.Font.GothamBold
-    title.TextXAlignment = Enum.TextXAlignment.Left
-
-    local version = Instance.new("TextLabel", header)
-    version.Size = UDim2.new(1, -50, 0.4, 0)
-    version.Position = UDim2.new(0, 15, 0, 35)
-    version.BackgroundTransparency = 1
-    version.Text = "AIMBOT PROFISSIONAL v8.0"
-    version.TextColor3 = Colors.Primary
-    version.TextSize = 14
-    version.Font = Enum.Font.Gotham
-    version.TextXAlignment = Enum.TextXAlignment.Left
-
-    local closeBtn = Instance.new("TextButton", header)
-    closeBtn.Size = UDim2.new(0, 40, 0, 40)
-    closeBtn.Position = UDim2.new(1, -50, 0.5, -20)
-    closeBtn.BackgroundColor3 = Colors.Danger
-    closeBtn.Text = "✕"
-    closeBtn.TextColor3 = Colors.Text
-    closeBtn.TextSize = 22
-    closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.BorderSizePixel = 0
-
-    local closeCorner = Instance.new("UICorner", closeBtn)
-    closeCorner.CornerRadius = UDim.new(1, 0)
-
-    closeBtn.MouseButton1Click:Connect(function()
-        UI:Destroy()
-        ClearESP()
-        if FPSBoosterActive then
-            ApplyFPSBooster(false)
-        end
-    end)
-
-    -- ÁREA DE CONTEÚDO (SCROLL)
-    local contentFrame = Instance.new("ScrollingFrame", mainFrame)
-    contentFrame.Size = UDim2.new(1, -20, 1, -80)
-    contentFrame.Position = UDim2.new(0, 10, 0, 70)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.ScrollBarThickness = 4
-    contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-
-    -- ===== CONSTRUÇÃO DO CONTEÚDO =====
-    local y = 0
-
-    -- INFO / FPS
-    local infoLabel = Instance.new("TextLabel", contentFrame)
-    infoLabel.Size = UDim2.new(1, -20, 0, 25)
-    infoLabel.Position = UDim2.new(0, 10, 0, y)
-    infoLabel.BackgroundTransparency = 1
-    infoLabel.Text = "📊 FPS: " .. FPSValue .. " | 🎯 ZK HUB"
-    infoLabel.TextColor3 = Colors.TextDim
-    infoLabel.TextSize = 14
-    infoLabel.Font = Enum.Font.Gotham
-    infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-    
-    spawn(function()
-        while UI and UI.Parent do
-            infoLabel.Text = "📊 FPS: " .. FPSValue .. " | 🎯 ZK HUB"
-            wait(0.5)
-        end
-    end)
-    
-    y = y + 35
-
-    -- ===== AIMBOT PRINCIPAL =====
-    local mainTitle = Instance.new("TextLabel", contentFrame)
-    mainTitle.Size = UDim2.new(1, -20, 0, 40)
-    mainTitle.Position = UDim2.new(0, 10, 0, y)
-    mainTitle.BackgroundTransparency = 1
-    mainTitle.Text = "🎯 AIMBOT PRINCIPAL"
-    mainTitle.TextColor3 = Colors.Text
-    mainTitle.TextSize = 24
-    mainTitle.Font = Enum.Font.GothamBold
-    mainTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    y = y + createToggle(contentFrame, y, "Ativar Aim Assist", "AimbotActive", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "⚡ Rage Mode (sem suavidade)", "RageMode", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "🔒 Aim Lock (trava fixa)", "AimLock", false)
-    y = y + 5
-    
-    if not Config.RageMode then
-        y = y + createSlider(contentFrame, y, "Suavidade da Mira", "AimbotSmooth", 0, 100, 18, "%")
-        y = y + 5
-    end
-
-    -- ===== SELEÇÃO DE ALVO =====
-    local targetTitle = Instance.new("TextLabel", contentFrame)
-    targetTitle.Size = UDim2.new(1, -20, 0, 30)
-    targetTitle.Position = UDim2.new(0, 10, 0, y)
-    targetTitle.BackgroundTransparency = 1
-    targetTitle.Text = "👤 SELEÇÃO DE ALVO"
-    targetTitle.TextColor3 = Colors.TextDim
-    targetTitle.TextSize = 18
-    targetTitle.Font = Enum.Font.GothamBold
-    targetTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 35
-
-    local partFrame = Instance.new("Frame", contentFrame)
-    partFrame.Size = UDim2.new(1, -20, 0, 45)
-    partFrame.Position = UDim2.new(0, 10, 0, y)
-    partFrame.BackgroundTransparency = 1
-
-    local headBtn = Instance.new("TextButton", partFrame)
-    headBtn.Size = UDim2.new(0, 90, 0, 40)
-    headBtn.Position = UDim2.new(0, 0, 0.5, -20)
-    headBtn.BackgroundColor3 = Config.AimbotTarget == "HEAD" and Colors.Primary or Colors.Inactive
-    headBtn.Text = "HEAD"
-    headBtn.TextColor3 = Colors.Text
-    headBtn.TextSize = 16
-    headBtn.Font = Enum.Font.GothamBold
-    headBtn.BorderSizePixel = 0
-
-    local torsoBtn = Instance.new("TextButton", partFrame)
-    torsoBtn.Size = UDim2.new(0, 90, 0, 40)
-    torsoBtn.Position = UDim2.new(0.5, -45, 0.5, -20)
-    torsoBtn.BackgroundColor3 = Config.AimbotTarget == "TORSO" and Colors.Primary or Colors.Inactive
-    torsoBtn.Text = "TORSO"
-    torsoBtn.TextColor3 = Colors.Text
-    torsoBtn.TextSize = 16
-    torsoBtn.Font = Enum.Font.GothamBold
-    torsoBtn.BorderSizePixel = 0
-
-    local rootBtn = Instance.new("TextButton", partFrame)
-    rootBtn.Size = UDim2.new(0, 90, 0, 40)
-    rootBtn.Position = UDim2.new(1, -90, 0.5, -20)
-    rootBtn.BackgroundColor3 = Config.AimbotTarget == "ROOT" and Colors.Primary or Colors.Inactive
-    rootBtn.Text = "ROOT"
-    rootBtn.TextColor3 = Colors.Text
-    rootBtn.TextSize = 16
-    rootBtn.Font = Enum.Font.GothamBold
-    rootBtn.BorderSizePixel = 0
-
-    local cornerH = Instance.new("UICorner", headBtn); cornerH.CornerRadius = UDim.new(0, 8)
-    local cornerT = Instance.new("UICorner", torsoBtn); cornerT.CornerRadius = UDim.new(0, 8)
-    local cornerR = Instance.new("UICorner", rootBtn); cornerR.CornerRadius = UDim.new(0, 8)
-
-    local function updateTargetButtons(selected)
-        Config.AimbotTarget = selected
-        headBtn.BackgroundColor3 = selected == "HEAD" and Colors.Primary or Colors.Inactive
-        torsoBtn.BackgroundColor3 = selected == "TORSO" and Colors.Primary or Colors.Inactive
-        rootBtn.BackgroundColor3 = selected == "ROOT" and Colors.Primary or Colors.Inactive
-        Notify("Alvo: " .. selected)
-    end
-
-    headBtn.MouseButton1Click:Connect(function() updateTargetButtons("HEAD") end)
-    torsoBtn.MouseButton1Click:Connect(function() updateTargetButtons("TORSO") end)
-    rootBtn.MouseButton1Click:Connect(function() updateTargetButtons("ROOT") end)
-
-    y = y + 55
-
-    y = y + createDropdown(contentFrame, y, "Prioridade do Alvo", "Priority", {"Center", "Distance", "Health", "Closest"}, "Center")
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "🚫 Ignorar times aliados", "IgnoreTeammates", true)
-    y = y + 5
-
-    -- ===== LIMITES =====
-    local limitsTitle = Instance.new("TextLabel", contentFrame)
-    limitsTitle.Size = UDim2.new(1, -20, 0, 30)
-    limitsTitle.Position = UDim2.new(0, 10, 0, y)
-    limitsTitle.BackgroundTransparency = 1
-    limitsTitle.Text = "📏 LIMITES"
-    limitsTitle.TextColor3 = Colors.TextDim
-    limitsTitle.TextSize = 18
-    limitsTitle.Font = Enum.Font.GothamBold
-    limitsTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 35
-
-    y = y + createSlider(contentFrame, y, "Campo de Visão (FOV)", "AimbotFOV", 50, 500, 150, "px")
-    y = y + 5
-    y = y + createSlider(contentFrame, y, "Distância Máxima", "MaxDistance", 50, 1000, 300, "m")
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "🔍 Só mirar se visível", "AimOnlyVisible", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "📌 Só mirar dentro do FOV", "AimOnlyInFOV", true)
-    y = y + 5
-
-    -- ===== ATIVAÇÃO =====
-    local activationTitle = Instance.new("TextLabel", contentFrame)
-    activationTitle.Size = UDim2.new(1, -20, 0, 30)
-    activationTitle.Position = UDim2.new(0, 10, 0, y)
-    activationTitle.BackgroundTransparency = 1
-    activationTitle.Text = "🔫 ATIVAÇÃO"
-    activationTitle.TextColor3 = Colors.TextDim
-    activationTitle.TextSize = 18
-    activationTitle.Font = Enum.Font.GothamBold
-    activationTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 35
-
-    y = y + createDropdown(contentFrame, y, "Modo de Ativação", "ActivationMode", {"Always", "Key", "MouseButton"}, "Always")
-    y = y + 5
-
-    if Config.ActivationMode == "Key" then
-        y = y + createKeybind(contentFrame, y, "Tecla de Ativação", "AimKey", Enum.KeyCode.E)
-        y = y + 5
-    end
-
-    if Config.ActivationMode == "MouseButton" then
-        y = y + createDropdown(contentFrame, y, "Botão do Mouse", "AimMouseButton", {"MouseButton2", "MouseButton1"}, "MouseButton2")
-        y = y + 5
-    end
-
-    -- ===== PREVISÃO =====
-    local predictionTitle = Instance.new("TextLabel", contentFrame)
-    predictionTitle.Size = UDim2.new(1, -20, 0, 30)
-    predictionTitle.Position = UDim2.new(0, 10, 0, y)
-    predictionTitle.BackgroundTransparency = 1
-    predictionTitle.Text = "📈 PREVISÃO DE MOVIMENTO"
-    predictionTitle.TextColor3 = Colors.TextDim
-    predictionTitle.TextSize = 18
-    predictionTitle.Font = Enum.Font.GothamBold
-    predictionTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 35
-
-    y = y + createToggle(contentFrame, y, "Ativar previsão", "PredictionEnabled", true)
-    y = y + 5
-
-    if Config.PredictionEnabled then
-        y = y + createSlider(contentFrame, y, "Intensidade da Previsão", "PredictionAmount", 0, 100, 15, "%")
-        y = y + 5
-    end
-
-    -- ===== VISUAL =====
-    local visualTitle = Instance.new("TextLabel", contentFrame)
-    visualTitle.Size = UDim2.new(1, -20, 0, 40)
-    visualTitle.Position = UDim2.new(0, 10, 0, y)
-    visualTitle.BackgroundTransparency = 1
-    visualTitle.Text = "🎨 VISUAL"
-    visualTitle.TextColor3 = Colors.Text
-    visualTitle.TextSize = 24
-    visualTitle.Font = Enum.Font.GothamBold
-    visualTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    y = y + createToggle(contentFrame, y, "Mostrar Círculo FOV", "ShowFOV", true)
-    y = y + 5
-
-    if Config.ShowFOV then
-        y = y + createToggle(contentFrame, y, "🌈 FOV Arco-Íris", "RainbowFOV", true)
-        y = y + 5
-    end
-    
-    y = y + createToggle(contentFrame, y, "⚪ Mostrar Hitbox", "ShowHitbox", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "📏 Mostrar Distância", "ShowDistance", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "❤️ Mostrar Vida", "ShowHealth", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "📊 Mostrar Status na Tela", "ShowStatus", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "🧭 Mostrar Direção do Alvo", "ShowDirection", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "🔫 Mostrar Arma", "ShowWeapon", true)
-    y = y + 5
-
-    -- ===== ESP =====
-    local espTitle = Instance.new("TextLabel", contentFrame)
-    espTitle.Size = UDim2.new(1, -20, 0, 40)
-    espTitle.Position = UDim2.new(0, 10, 0, y)
-    espTitle.BackgroundTransparency = 1
-    espTitle.Text = "👁️ ESP"
-    espTitle.TextColor3 = Colors.Text
-    espTitle.TextSize = 24
-    espTitle.Font = Enum.Font.GothamBold
-    espTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    if not DrawingSupported then
-        local warning = Instance.new("TextLabel", contentFrame)
-        warning.Size = UDim2.new(1, -20, 0, 30)
-        warning.Position = UDim2.new(0, 10, 0, y)
-        warning.BackgroundTransparency = 1
-        warning.Text = "⚠️ Seu executor não suporta ESP (Drawing)"
-        warning.TextColor3 = Colors.Danger
-        warning.TextSize = 14
-        warning.Font = Enum.Font.Gotham
-        warning.TextXAlignment = Enum.TextXAlignment.Left
-        y = y + 35
-    end
-
-    y = y + createToggle(contentFrame, y, "Ativar ESP", "ESPActive", true)
-    y = y + 5
-
-    if Config.ESPActive then
-        y = y + createToggle(contentFrame, y, "Mostrar Caixa", "ESPBox", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Mostrar Nome", "ESPName", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Mostrar Barra de Vida", "ESPHealthBar", false)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Mostrar Vida (Texto)", "ESPHealthText", true)
-        y = y + 5
-        
-        if Config.ESPHealthText then
-            y = y + createToggle(contentFrame, y, "Mostrar Porcentagem", "ESPPercent", true)
-            y = y + 5
-        end
-        
-        y = y + createToggle(contentFrame, y, "Mostrar Distância", "ESPDistance", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Mostrar Arma", "ESPWeapon", true)
-        y = y + 5
-        y = y + createToggle(contentFrame, y, "Usar Cor do Time", "ESPTeamColor", true)
-        y = y + 5
-    end
-
-     -- ===== EXTRAS =====
-    local extrasTitle = Instance.new("TextLabel", contentFrame)
-    extrasTitle.Size = UDim2.new(1, -20, 0, 40)
-    extrasTitle.Position = UDim2.new(0, 10, 0, y)
-    extrasTitle.BackgroundTransparency = 1
-    extrasTitle.Text = "⚙️ EXTRAS"
-    extrasTitle.TextColor3 = Colors.Text
-    extrasTitle.TextSize = 24
-    extrasTitle.Font = Enum.Font.GothamBold
-    extrasTitle.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 45
-
-    y = y + createToggle(contentFrame, y, "Mostrar FPS no Menu", "FPSCounter", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "FPS Booster", "FPSBooster", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Remover Pontos Verdes", "RemoveGreenDots", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
-    y = y + 5
-
-    -- CRÉDITO
-    local credit = Instance.new("TextLabel", contentFrame)
-    credit.Size = UDim2.new(1, -20, 0, 40)
-    credit.Position = UDim2.new(0, 10, 0, y)
-    credit.BackgroundTransparency = 1
-    credit.Text = "✨ ZK HUB OFICIAL ✨"
-    credit.TextColor3 = Colors.Primary
-    credit.TextSize = 16
-    credit.Font = Enum.Font.GothamBold
-    credit.TextXAlignment = Enum.TextXAlignment.Center
-    y = y + 45
-
-    -- BARRA COMPACTA
+    -- ===== BARRA COMPACTA (sempre visível) =====
     local topBar = Instance.new("Frame", UI)
     topBar.Size = UDim2.new(0, 300, 0, 50)
     topBar.Position = UDim2.new(0.5, -150, 0.3, 0)
@@ -1442,6 +1153,351 @@ local function CreateUI()
     topBarCloseBtn.TextSize = 26
     topBarCloseBtn.Font = Enum.Font.GothamBold
 
+    -- ===== FRAME PRINCIPAL (inicialmente oculto) =====
+    local mainFrame = Instance.new("Frame", UI)
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 450, 0, 650)
+    mainFrame.Position = UDim2.new(0.5, -225, 0.5, -325)
+    mainFrame.BackgroundColor3 = Colors.Background
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.Visible = false  -- começa oculto, abre com o botão "+"
+
+    local frameCorner = Instance.new("UICorner", mainFrame)
+    frameCorner.CornerRadius = UDim.new(0, 15)
+
+    -- CABEÇALHO do mainFrame
+    local header = Instance.new("Frame", mainFrame)
+    header.Size = UDim2.new(1, 0, 0, 60)
+    header.BackgroundColor3 = Colors.Surface
+
+    local headerCorner = Instance.new("UICorner", header)
+    headerCorner.CornerRadius = UDim.new(0, 15)
+
+    local title = Instance.new("TextLabel", header)
+    title.Size = UDim2.new(1, -50, 0.6, 0)
+    title.Position = UDim2.new(0, 15, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "ZK HUB"
+    title.TextColor3 = Colors.Text
+    title.TextSize = 26
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+
+    local version = Instance.new("TextLabel", header)
+    version.Size = UDim2.new(1, -50, 0.4, 0)
+    version.Position = UDim2.new(0, 15, 0, 35)
+    version.BackgroundTransparency = 1
+    version.Text = "AIMBOT PROFISSIONAL v8.0"
+    version.TextColor3 = Colors.Primary
+    version.TextSize = 14
+    version.Font = Enum.Font.Gotham
+    version.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Botão de fechar no mainFrame (apenas esconde)
+    local closeMainBtn = Instance.new("TextButton", header)
+    closeMainBtn.Size = UDim2.new(0, 40, 0, 40)
+    closeMainBtn.Position = UDim2.new(1, -50, 0.5, -20)
+    closeMainBtn.BackgroundColor3 = Colors.Danger
+    closeMainBtn.Text = "X"
+    closeMainBtn.TextColor3 = Colors.Text
+    closeMainBtn.TextSize = 22
+    closeMainBtn.Font = Enum.Font.GothamBold
+    closeMainBtn.BorderSizePixel = 0
+
+    local closeMainCorner = Instance.new("UICorner", closeMainBtn)
+    closeMainCorner.CornerRadius = UDim.new(1, 0)
+
+    closeMainBtn.MouseButton1Click:Connect(function()
+        mainFrame.Visible = false
+    end)
+
+    -- ÁREA DE CONTEÚDO (SCROLL) dentro do mainFrame
+    local contentFrame = Instance.new("ScrollingFrame", mainFrame)
+    contentFrame.Size = UDim2.new(1, -20, 1, -80)
+    contentFrame.Position = UDim2.new(0, 10, 0, 70)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.ScrollBarThickness = 4
+    contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        -- ===== CONSTRUÇÃO DO CONTEÚDO =====
+    local y = 0
+
+    -- INFO / FPS
+    local infoLabel = Instance.new("TextLabel", contentFrame)
+    infoLabel.Size = UDim2.new(1, -20, 0, 30)
+    infoLabel.Position = UDim2.new(0, 10, 0, y)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.Text = "FPS: " .. FPSValue .. " | ZK HUB"
+    infoLabel.TextColor3 = Colors.TextDim
+    infoLabel.TextSize = 14
+    infoLabel.Font = Enum.Font.Gotham
+    infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 35
+
+    spawn(function()
+        while UI and UI.Parent do
+            infoLabel.Text = "FPS: " .. FPSValue .. " | ZK HUB"
+            wait(0.5)
+        end
+    end)
+
+    -- ==== AIMBOT PRINCIPAL ====
+    local mainTitle = Instance.new("TextLabel", contentFrame)
+    mainTitle.Size = UDim2.new(1, -20, 0, 40)
+    mainTitle.Position = UDim2.new(0, 10, 0, y)
+    mainTitle.BackgroundTransparency = 1
+    mainTitle.Text = "AIMBOT PRINCIPAL"
+    mainTitle.TextColor3 = Colors.Text
+    mainTitle.TextSize = 24
+    mainTitle.Font = Enum.Font.GothamBold
+    mainTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 45
+
+    y = y + createToggle(contentFrame, y, "Ativar Aimbot", "AimbotActive", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Rage Mode", "RageMode", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Aim Lock", "AimLock", false)
+    y = y + 5
+
+    if not Config.RageMode then
+        y = y + createSlider(contentFrame, y, "Suavidade", "AimbotSmooth", 1, 50, 18, "")
+        y = y + 5
+    end
+
+    -- ==== SELEÇÃO DE ALVO ====
+    local targetTitle = Instance.new("TextLabel", contentFrame)
+    targetTitle.Size = UDim2.new(1, -20, 0, 30)
+    targetTitle.Position = UDim2.new(0, 10, 0, y)
+    targetTitle.BackgroundTransparency = 1
+    targetTitle.Text = "SELEÇÃO DE ALVO"
+    targetTitle.TextColor3 = Colors.TextDim
+    targetTitle.TextSize = 18
+    targetTitle.Font = Enum.Font.GothamBold
+    targetTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 35
+
+    local partFrame = Instance.new("Frame", contentFrame)
+    partFrame.Size = UDim2.new(1, -20, 0, 45)
+    partFrame.Position = UDim2.new(0, 10, 0, y)
+    partFrame.BackgroundTransparency = 1
+
+    local function updateTargetSelection(selected)
+        Config.AimbotTarget = selected
+        headBtn.BackgroundColor3 = (selected == "HEAD") and Colors.Success or Colors.Inactive
+        torsoBtn.BackgroundColor3 = (selected == "TORSO") and Colors.Success or Colors.Inactive
+        rootBtn.BackgroundColor3 = (selected == "ROOT") and Colors.Success or Colors.Inactive
+        Notify("Alvo: " .. selected)
+    end
+
+    local headBtn = Instance.new("TextButton", partFrame)
+    headBtn.Size = UDim2.new(0, 90, 0, 40)
+    headBtn.Position = UDim2.new(0, 0, 0.5, -20)
+    headBtn.BackgroundColor3 = (Config.AimbotTarget == "HEAD") and Colors.Success or Colors.Inactive
+    headBtn.Text = "HEAD"
+    headBtn.TextColor3 = Colors.Text
+    headBtn.TextSize = 16
+    headBtn.Font = Enum.Font.GothamBold
+    headBtn.BorderSizePixel = 0
+    headBtn.MouseButton1Click:Connect(function() updateTargetSelection("HEAD") end)
+
+    local torsoBtn = Instance.new("TextButton", partFrame)
+    torsoBtn.Size = UDim2.new(0, 90, 0, 40)
+    torsoBtn.Position = UDim2.new(0.5, -45, 0.5, -20)
+    torsoBtn.BackgroundColor3 = (Config.AimbotTarget == "TORSO") and Colors.Success or Colors.Inactive
+    torsoBtn.Text = "TORSO"
+    torsoBtn.TextColor3 = Colors.Text
+    torsoBtn.TextSize = 16
+    torsoBtn.Font = Enum.Font.GothamBold
+    torsoBtn.BorderSizePixel = 0
+    torsoBtn.MouseButton1Click:Connect(function() updateTargetSelection("TORSO") end)
+
+    local rootBtn = Instance.new("TextButton", partFrame)
+    rootBtn.Size = UDim2.new(0, 90, 0, 40)
+    rootBtn.Position = UDim2.new(1, -90, 0.5, -20)
+    rootBtn.BackgroundColor3 = (Config.AimbotTarget == "ROOT") and Colors.Success or Colors.Inactive
+    rootBtn.Text = "ROOT"
+    rootBtn.TextColor3 = Colors.Text
+    rootBtn.TextSize = 16
+    rootBtn.Font = Enum.Font.GothamBold
+    rootBtn.BorderSizePixel = 0
+    rootBtn.MouseButton1Click:Connect(function() updateTargetSelection("ROOT") end)
+
+    y = y + 55
+
+    y = y + createDropdown(contentFrame, y, "Prioridade", "Priority", {"Center", "Distance", "Health"}, "Center")
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Ignorar aliados", "IgnoreTeammates", true)
+    y = y + 5
+
+    -- ==== LIMITES ====
+    local limitsTitle = Instance.new("TextLabel", contentFrame)
+    limitsTitle.Size = UDim2.new(1, -20, 0, 30)
+    limitsTitle.Position = UDim2.new(0, 10, 0, y)
+    limitsTitle.BackgroundTransparency = 1
+    limitsTitle.Text = "LIMITES"
+    limitsTitle.TextColor3 = Colors.TextDim
+    limitsTitle.TextSize = 18
+    limitsTitle.Font = Enum.Font.GothamBold
+    limitsTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 35
+
+    y = y + createSlider(contentFrame, y, "Campo de Visão (FOV)", "AimbotFOV", 30, 500, 150, "")
+    y = y + 5
+    y = y + createSlider(contentFrame, y, "Distância Máxima", "MaxDistance", 50, 1000, 300, "m")
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Só mirar dentro do FOV", "AimOnlyInFOV", true)
+    y = y + 5
+
+    -- ==== ATIVAÇÃO ====
+    local activationTitle = Instance.new("TextLabel", contentFrame)
+    activationTitle.Size = UDim2.new(1, -20, 0, 30)
+    activationTitle.Position = UDim2.new(0, 10, 0, y)
+    activationTitle.BackgroundTransparency = 1
+    activationTitle.Text = "ATIVAÇÃO"
+    activationTitle.TextColor3 = Colors.TextDim
+    activationTitle.TextSize = 18
+    activationTitle.Font = Enum.Font.GothamBold
+    activationTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 35
+
+    y = y + createDropdown(contentFrame, y, "Modo de Ativação", "ActivationMode", {"Always", "Key", "MouseButton"}, "Always")
+    y = y + 5
+
+    if Config.ActivationMode == "Key" then
+        y = y + createKeybind(contentFrame, y, "Tecla de Ativação", "AimKey", Enum.KeyCode.E)
+        y = y + 5
+    end
+
+    if Config.ActivationMode == "MouseButton" then
+        y = y + createDropdown(contentFrame, y, "Botão de Ativação", "AimMouseButton", {"MouseButton1", "MouseButton2", "MouseButton3"}, "MouseButton2")
+        y = y + 5
+    end
+
+    -- ==== PREVISÃO ====
+    local predictionTitle = Instance.new("TextLabel", contentFrame)
+    predictionTitle.Size = UDim2.new(1, -20, 0, 30)
+    predictionTitle.Position = UDim2.new(0, 10, 0, y)
+    predictionTitle.BackgroundTransparency = 1
+    predictionTitle.Text = "PREVISÃO DE MOVIMENTO"
+    predictionTitle.TextColor3 = Colors.TextDim
+    predictionTitle.TextSize = 18
+    predictionTitle.Font = Enum.Font.GothamBold
+    predictionTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 35
+
+    y = y + createToggle(contentFrame, y, "Ativar previsão", "PredictionEnabled", true)
+    y = y + 5
+
+    if Config.PredictionEnabled then
+        y = y + createSlider(contentFrame, y, "Intensidade da previsão (%)", "PredictionAmount", 1, 30, 15, "%")
+        y = y + 5
+    end
+
+    -- ==== VISUAL ====
+    local visualTitle = Instance.new("TextLabel", contentFrame)
+    visualTitle.Size = UDim2.new(1, -20, 0, 40)
+    visualTitle.Position = UDim2.new(0, 10, 0, y)
+    visualTitle.BackgroundTransparency = 1
+    visualTitle.Text = "VISUAL"
+    visualTitle.TextColor3 = Colors.Text
+    visualTitle.TextSize = 24
+    visualTitle.Font = Enum.Font.GothamBold
+    visualTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 45
+
+    y = y + createToggle(contentFrame, y, "Mostrar Círculo FOV", "ShowFOV", true)
+    y = y + 5
+
+    if Config.ShowFOV then
+        y = y + createToggle(contentFrame, y, "FOV Arco-Íris", "RainbowFOV", true)
+        y = y + 5
+    end
+
+    y = y + createToggle(contentFrame, y, "Mostrar Hitbox", "ShowHitbox", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Distância", "ShowDistance", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Vida", "ShowHealth", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Status", "ShowStatus", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Direção", "ShowDirection", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Mostrar Arma", "ShowWeapon", true)
+    y = y + 5
+
+    -- ==== ESP ====
+    local espTitle = Instance.new("TextLabel", contentFrame)
+    espTitle.Size = UDim2.new(1, -20, 0, 40)
+    espTitle.Position = UDim2.new(0, 10, 0, y)
+    espTitle.BackgroundTransparency = 1
+    espTitle.Text = "ESP"
+    espTitle.TextColor3 = Colors.Text
+    espTitle.TextSize = 24
+    espTitle.Font = Enum.Font.GothamBold
+    espTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 45
+
+    y = y + createToggle(contentFrame, y, "ESP Ativo", "ESPActive", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Caixa", "ESPBox", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Nome", "ESPName", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Barra de Vida", "ESPHealthBar", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Texto de Vida", "ESPHealthText", true)
+    y = y + 5
+
+    if Config.ESPHealthText then
+        y = y + createToggle(contentFrame, y, "Mostrar Percentual", "ESPPercent", true)
+        y = y + 5
+    end
+
+    y = y + createToggle(contentFrame, y, "Distância", "ESPDistance", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Arma", "ESPWeapon", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Usar Cor do Time", "ESPTeamColor", true)
+    y = y + 5
+
+    -- ==== EXTRAS ====
+    local extraTitle = Instance.new("TextLabel", contentFrame)
+    extraTitle.Size = UDim2.new(1, -20, 0, 40)
+    extraTitle.Position = UDim2.new(0, 10, 0, y)
+    extraTitle.BackgroundTransparency = 1
+    extraTitle.Text = "EXTRAS"
+    extraTitle.TextColor3 = Colors.Text
+    extraTitle.TextSize = 24
+    extraTitle.Font = Enum.Font.GothamBold
+    extraTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 45
+
+    y = y + createToggle(contentFrame, y, "Mostrar FPS", "FPSCounter", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "FPS Booster", "FPSBooster", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Remover Pontos Verdes", "RemoveGreenDots", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
+    y = y + 5
+
+    -- CRÉDITO
+    local credit = Instance.new("TextLabel", contentFrame)
+    credit.Size = UDim2.new(1, -20, 0, 40)
+    credit.Position = UDim2.new(0, 10, 0, y)
+    credit.BackgroundTransparency = 1
+    credit.Text = "Criado por ECTORSTUFFO"
+    credit.TextColor3 = Colors.TextDim
+    credit.TextSize = 16
+    credit.Font = Enum.Font.Gotham
+    credit.TextXAlignment = Enum.TextXAlignment.Center
+    y = y + 40
+
+    contentFrame.CanvasSize = UDim2.new(0, 0, 0, y + 10)
+
+    -- ===== EVENTOS DOS BOTÕES DA BARRA COMPACTA =====
     topBarOpenBtn.MouseButton1Click:Connect(function()
         mainFrame.Visible = not mainFrame.Visible
     end)
@@ -1455,7 +1511,9 @@ local function CreateUI()
     end)
 end
 
--- ========== INICIAR ==========
-CreateUI()
-Notify("ZK HUB v8.0 • AIMBOT PROFISSIONAL")
-```
+-- ========== INICIALIZAÇÃO FINAL ==========
+BuildUI()
+Notify("ZK HUB 🎯 carregado com sucesso!")
+if Config.FPSBooster then
+    ApplyFPSBooster(true)
+end
