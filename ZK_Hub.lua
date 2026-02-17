@@ -621,7 +621,7 @@ local function UpdateESP()
                 nameLabel.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight/2 - 16)
             end
 
-                      -- VIDA TEXTO
+                        -- VIDA TEXTO
             if Config.ESPHealthText then
                 if not esp.HealthText then
                     local healthLabel = Drawing.new("Text")
@@ -714,6 +714,7 @@ local function UpdateESP()
         end
     end
 end
+
 -- ========== HITBOX ==========
 local function UpdateHitbox()
     if not Config.ShowHitbox or not DrawingSupported then
@@ -1092,6 +1093,7 @@ local function createKeybind(parent, y, text, var, default)
 
     return 45
 end
+
 -- ========== REMOVER PONTOS VERDES ==========
 local function RemoveGreenDots()
     if not Config.RemoveGreenDots then return end
@@ -1212,7 +1214,7 @@ local function CreateUI()
     contentFrame.Position = UDim2.new(0, 10, 0, 70)
     contentFrame.BackgroundTransparency = 1
     contentFrame.ScrollBarThickness = 4
-    contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        contentFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
     -- ===== CONSTRUÇÃO DO CONTEÚDO =====
     local y = 0
