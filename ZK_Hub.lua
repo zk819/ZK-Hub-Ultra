@@ -621,7 +621,7 @@ local function UpdateESP()
                 nameLabel.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight/2 - 16)
             end
 
-            --             -- VIDA TEXTO
+                      -- VIDA TEXTO
             if Config.ESPHealthText then
                 if not esp.HealthText then
                     local healthLabel = Drawing.new("Text")
@@ -714,45 +714,6 @@ local function UpdateESP()
         end
     end
 end
-            -- ARMA
-            if Config.ESPWeapon then
-                if not esp.Weapon then
-                    local weaponLabel = Drawing.new("Text")
-                    weaponLabel.Visible = false
-                    weaponLabel.Color = Color3.new(1, 0.8, 0)
-                    weaponLabel.Size = 14
-                    weaponLabel.Center = true
-                    weaponLabel.Outline = true
-                    esp.Weapon = weaponLabel
-                end
-                
-                local weaponName = GetWeaponName(model)
-                local weaponLabel = esp.Weapon
-                weaponLabel.Visible = true
-                weaponLabel.Text = "🔫 " .. weaponName
-                weaponLabel.Position = Vector2.new(screenPos.X, screenPos.Y + boxHeight/2 + 18)
-            else
-                if esp.Weapon then
-                    esp.Weapon.Visible = false
-                end
-            end
-        else
-            if ESPDrawings[model] then
-                for _, d in pairs(ESPDrawings[model]) do
-                    if d and d.Visible ~= nil then
-                        if type(d) == "table" and d.Bg and d.Fill then
-                            d.Bg.Visible = false
-                            d.Fill.Visible = false
-                        else
-                            d.Visible = false
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
 -- ========== HITBOX ==========
 local function UpdateHitbox()
     if not Config.ShowHitbox or not DrawingSupported then
@@ -885,6 +846,7 @@ RunService.RenderStepped:Connect(function()
     UpdateStatus()
     UpdateESP()
 end)
+
 -- ========== FUNÇÕES UI ==========
 local function createToggle(parent, y, text, var, default)
     Config[var] = default
@@ -1130,7 +1092,6 @@ local function createKeybind(parent, y, text, var, default)
 
     return 45
 end
-
 -- ========== REMOVER PONTOS VERDES ==========
 local function RemoveGreenDots()
     if not Config.RemoveGreenDots then return end
@@ -1452,164 +1413,163 @@ local function CreateUI()
     y = y + 5
 
     if Config.ShowFOV then
-        y =     y = y + createToggle(contentFrame, y, "🌈 FOV Arco-Íris", "RainbowFOV", true)
-    y = y + 5
-end
-
-y = y + createToggle(contentFrame, y, "⚪ Mostrar Hitbox", "ShowHitbox", false)
-y = y + 5
-y = y + createToggle(contentFrame, y, "📏 Mostrar Distância", "ShowDistance", true)
-y = y + 5
-y = y + createToggle(contentFrame, y, "❤️ Mostrar Vida", "ShowHealth", true)
-y = y + 5
-y = y + createToggle(contentFrame, y, "📊 Mostrar Status na Tela", "ShowStatus", true)
-y = y + 5
-y = y + createToggle(contentFrame, y, "🧭 Mostrar Direção do Alvo", "ShowDirection", false)
-y = y + 5
-y = y + createToggle(contentFrame, y, "🔫 Mostrar Arma", "ShowWeapon", true)
-y = y + 5
-
--- ===== ESP =====
-local espTitle = Instance.new("TextLabel", contentFrame)
-espTitle.Size = UDim2.new(1, -20, 0, 40)
-espTitle.Position = UDim2.new(0, 10, 0, y)
-espTitle.BackgroundTransparency = 1
-espTitle.Text = "👁️ ESP"
-espTitle.TextColor3 = Colors.Text
-espTitle.TextSize = 24
-espTitle.Font = Enum.Font.GothamBold
-espTitle.TextXAlignment = Enum.TextXAlignment.Left
-y = y + 45
-
-if not DrawingSupported then
-    local warning = Instance.new("TextLabel", contentFrame)
-    warning.Size = UDim2.new(1, -20, 0, 30)
-    warning.Position = UDim2.new(0, 10, 0, y)
-    warning.BackgroundTransparency = 1
-    warning.Text = "⚠️ Seu executor não suporta ESP (Drawing)"
-    warning.TextColor3 = Colors.Danger
-    warning.TextSize = 14
-    warning.Font = Enum.Font.Gotham
-    warning.TextXAlignment = Enum.TextXAlignment.Left
-    y = y + 35
-end
-
-y = y + createToggle(contentFrame, y, "Ativar ESP", "ESPActive", true)
-y = y + 5
-
-if Config.ESPActive then
-    y = y + createToggle(contentFrame, y, "Mostrar Caixa", "ESPBox", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Mostrar Nome", "ESPName", true)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Mostrar Barra de Vida", "ESPHealthBar", false)
-    y = y + 5
-    y = y + createToggle(contentFrame, y, "Mostrar Vida (Texto)", "ESPHealthText", true)
-    y = y + 5
-    
-    if Config.ESPHealthText then
-        y = y + createToggle(contentFrame, y, "Mostrar Porcentagem", "ESPPercent", true)
+        y = y + createToggle(contentFrame, y, "🌈 FOV Arco-Íris", "RainbowFOV", true)
         y = y + 5
     end
     
-    y = y + createToggle(contentFrame, y, "Mostrar Distância", "ESPDistance", true)
+    y = y + createToggle(contentFrame, y, "⚪ Mostrar Hitbox", "ShowHitbox", false)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "Mostrar Arma", "ESPWeapon", true)
+    y = y + createToggle(contentFrame, y, "📏 Mostrar Distância", "ShowDistance", true)
     y = y + 5
-    y = y + createToggle(contentFrame, y, "Usar Cor do Time", "ESPTeamColor", true)
+    y = y + createToggle(contentFrame, y, "❤️ Mostrar Vida", "ShowHealth", true)
     y = y + 5
+    y = y + createToggle(contentFrame, y, "📊 Mostrar Status na Tela", "ShowStatus", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "🧭 Mostrar Direção do Alvo", "ShowDirection", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "🔫 Mostrar Arma", "ShowWeapon", true)
+    y = y + 5
+
+    -- ===== ESP =====
+    local espTitle = Instance.new("TextLabel", contentFrame)
+    espTitle.Size = UDim2.new(1, -20, 0, 40)
+    espTitle.Position = UDim2.new(0, 10, 0, y)
+    espTitle.BackgroundTransparency = 1
+    espTitle.Text = "👁️ ESP"
+    espTitle.TextColor3 = Colors.Text
+    espTitle.TextSize = 24
+    espTitle.Font = Enum.Font.GothamBold
+    espTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 45
+
+    if not DrawingSupported then
+        local warning = Instance.new("TextLabel", contentFrame)
+        warning.Size = UDim2.new(1, -20, 0, 30)
+        warning.Position = UDim2.new(0, 10, 0, y)
+        warning.BackgroundTransparency = 1
+        warning.Text = "⚠️ Seu executor não suporta ESP (Drawing)"
+        warning.TextColor3 = Colors.Danger
+        warning.TextSize = 14
+        warning.Font = Enum.Font.Gotham
+        warning.TextXAlignment = Enum.TextXAlignment.Left
+        y = y + 35
+    end
+
+    y = y + createToggle(contentFrame, y, "Ativar ESP", "ESPActive", true)
+    y = y + 5
+
+    if Config.ESPActive then
+        y = y + createToggle(contentFrame, y, "Mostrar Caixa", "ESPBox", true)
+        y = y + 5
+        y = y + createToggle(contentFrame, y, "Mostrar Nome", "ESPName", true)
+        y = y + 5
+        y = y + createToggle(contentFrame, y, "Mostrar Barra de Vida", "ESPHealthBar", false)
+        y = y + 5
+        y = y + createToggle(contentFrame, y, "Mostrar Vida (Texto)", "ESPHealthText", true)
+        y = y + 5
+        
+        if Config.ESPHealthText then
+            y = y + createToggle(contentFrame, y, "Mostrar Porcentagem", "ESPPercent", true)
+            y = y + 5
+        end
+        
+        y = y + createToggle(contentFrame, y, "Mostrar Distância", "ESPDistance", true)
+        y = y + 5
+        y = y + createToggle(contentFrame, y, "Mostrar Arma", "ESPWeapon", true)
+        y = y + 5
+        y = y + createToggle(contentFrame, y, "Usar Cor do Time", "ESPTeamColor", true)
+        y = y + 5
+    end
+
+    -- ===== EXTRAS =====
+    local extrasTitle = Instance.new("TextLabel", contentFrame)
+    extrasTitle.Size = UDim2.new(1, -20, 0, 40)
+    extrasTitle.Position = UDim2.new(0, 10, 0, y)
+    extrasTitle.BackgroundTransparency = 1
+    extrasTitle.Text = "⚙️ EXTRAS"
+    extrasTitle.TextColor3 = Colors.Text
+    extrasTitle.TextSize = 24
+    extrasTitle.Font = Enum.Font.GothamBold
+    extrasTitle.TextXAlignment = Enum.TextXAlignment.Left
+    y = y + 45
+
+    y = y + createToggle(contentFrame, y, "Mostrar FPS no Menu", "FPSCounter", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "FPS Booster", "FPSBooster", false)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Remover Pontos Verdes", "RemoveGreenDots", true)
+    y = y + 5
+    y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
+    y = y + 5
+
+    -- CRÉDITO
+    local credit = Instance.new("TextLabel", contentFrame)
+    credit.Size = UDim2.new(1, -20, 0, 40)
+    credit.Position = UDim2.new(0, 10, 0, y)
+    credit.BackgroundTransparency = 1
+    credit.Text = "✨ ZK HUB OFICIAL ✨"
+    credit.TextColor3 = Colors.Primary
+    credit.TextSize = 16
+    credit.Font = Enum.Font.GothamBold
+    credit.TextXAlignment = Enum.TextXAlignment.Center
+    y = y + 45
+
+    -- BARRA COMPACTA
+    local topBar = Instance.new("Frame", UI)
+    topBar.Size = UDim2.new(0, 300, 0, 50)
+    topBar.Position = UDim2.new(0.5, -150, 0.3, 0)
+    topBar.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+    topBar.BorderSizePixel = 0
+    topBar.Active = true
+    topBar.Draggable = true
+
+    local topBarCorner = Instance.new("UICorner", topBar)
+    topBarCorner.CornerRadius = UDim.new(0, 14)
+
+    local topBarStroke = Instance.new("UIStroke", topBar)
+    topBarStroke.Color = Color3.fromRGB(220, 220, 220)
+    topBarStroke.Thickness = 1
+
+    local topBarTitle = Instance.new("TextLabel", topBar)
+    topBarTitle.Size = UDim2.new(0.6, 0, 1, 0)
+    topBarTitle.Position = UDim2.new(0, 15, 0, 0)
+    topBarTitle.BackgroundTransparency = 1
+    topBarTitle.Text = "ZK HUB"
+    topBarTitle.TextColor3 = Color3.fromRGB(40, 40, 40)
+    topBarTitle.TextSize = 20
+    topBarTitle.Font = Enum.Font.GothamBold
+    topBarTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+    local topBarOpenBtn = Instance.new("TextButton", topBar)
+    topBarOpenBtn.Size = UDim2.new(0, 35, 0, 35)
+    topBarOpenBtn.Position = UDim2.new(1, -80, 0.5, -17.5)
+    topBarOpenBtn.BackgroundTransparency = 1
+    topBarOpenBtn.Text = "+"
+    topBarOpenBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    topBarOpenBtn.TextSize = 26
+    topBarOpenBtn.Font = Enum.Font.GothamBold
+
+    local topBarCloseBtn = Instance.new("TextButton", topBar)
+    topBarCloseBtn.Size = UDim2.new(0, 35, 0, 35)
+    topBarCloseBtn.Position = UDim2.new(1, -40, 0.5, -17.5)
+    topBarCloseBtn.BackgroundTransparency = 1
+    topBarCloseBtn.Text = "×"
+    topBarCloseBtn.TextColor3 = Color3.fromRGB(120, 120, 120)
+    topBarCloseBtn.TextSize = 26
+    topBarCloseBtn.Font = Enum.Font.GothamBold
+
+    topBarOpenBtn.MouseButton1Click:Connect(function()
+        mainFrame.Visible = not mainFrame.Visible
+    end)
+
+    topBarCloseBtn.MouseButton1Click:Connect(function()
+        UI:Destroy()
+        ClearESP()
+        if FPSBoosterActive then
+            ApplyFPSBooster(false)
+        end
+    end)
 end
-
--- ===== EXTRAS =====
-local extrasTitle = Instance.new("TextLabel", contentFrame)
-extrasTitle.Size = UDim2.new(1, -20, 0, 40)
-extrasTitle.Position = UDim2.new(0, 10, 0, y)
-extrasTitle.BackgroundTransparency = 1
-extrasTitle.Text = "⚙️ EXTRAS"
-extrasTitle.TextColor3 = Colors.Text
-extrasTitle.TextSize = 24
-extrasTitle.Font = Enum.Font.GothamBold
-extrasTitle.TextXAlignment = Enum.TextXAlignment.Left
-y = y + 45
-
-y = y + createToggle(contentFrame, y, "Mostrar FPS no Menu", "FPSCounter", true)
-y = y + 5
-y = y + createToggle(contentFrame, y, "FPS Booster", "FPSBooster", false)
-y = y + 5
-y = y + createToggle(contentFrame, y, "Remover Pontos Verdes", "RemoveGreenDots", true)
-y = y + 5
-y = y + createToggle(contentFrame, y, "Notificações", "Notifications", true)
-y = y + 5
-
--- CRÉDITO
-local credit = Instance.new("TextLabel", contentFrame)
-credit.Size = UDim2.new(1, -20, 0, 40)
-credit.Position = UDim2.new(0, 10, 0, y)
-credit.BackgroundTransparency = 1
-credit.Text = "✨ ZK HUB OFICIAL ✨"
-credit.TextColor3 = Colors.Primary
-credit.TextSize = 16
-credit.Font = Enum.Font.GothamBold
-credit.TextXAlignment = Enum.TextXAlignment.Center
-y = y + 45
-
--- BARRA COMPACTA
-local topBar = Instance.new("Frame", UI)
-topBar.Size = UDim2.new(0, 300, 0, 50)
-topBar.Position = UDim2.new(0.5, -150, 0.3, 0)
-topBar.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
-topBar.BorderSizePixel = 0
-topBar.Active = true
-topBar.Draggable = true
-
-local topBarCorner = Instance.new("UICorner", topBar)
-topBarCorner.CornerRadius = UDim.new(0, 14)
-
-local topBarStroke = Instance.new("UIStroke", topBar)
-topBarStroke.Color = Color3.fromRGB(220, 220, 220)
-topBarStroke.Thickness = 1
-
-local topBarTitle = Instance.new("TextLabel", topBar)
-topBarTitle.Size = UDim2.new(0.6, 0, 1, 0)
-topBarTitle.Position = UDim2.new(0, 15, 0, 0)
-topBarTitle.BackgroundTransparency = 1
-topBarTitle.Text = "ZK HUB"
-topBarTitle.TextColor3 = Color3.fromRGB(40, 40, 40)
-topBarTitle.TextSize = 20
-topBarTitle.Font = Enum.Font.GothamBold
-topBarTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-local topBarOpenBtn = Instance.new("TextButton", topBar)
-topBarOpenBtn.Size = UDim2.new(0, 35, 0, 35)
-topBarOpenBtn.Position = UDim2.new(1, -80, 0.5, -17.5)
-topBarOpenBtn.BackgroundTransparency = 1
-topBarOpenBtn.Text = "+"
-topBarOpenBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-topBarOpenBtn.TextSize = 26
-topBarOpenBtn.Font = Enum.Font.GothamBold
-
-local topBarCloseBtn = Instance.new("TextButton", topBar)
-topBarCloseBtn.Size = UDim2.new(0, 35, 0, 35)
-topBarCloseBtn.Position = UDim2.new(1, -40, 0.5, -17.5)
-topBarCloseBtn.BackgroundTransparency = 1
-topBarCloseBtn.Text = "×"
-topBarCloseBtn.TextColor3 = Color3.fromRGB(120, 120, 120)
-topBarCloseBtn.TextSize = 26
-topBarCloseBtn.Font = Enum.Font.GothamBold
-
-topBarOpenBtn.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
-end)
-
-topBarCloseBtn.MouseButton1Click:Connect(function()
-    UI:Destroy()
-    ClearESP()
-    if FPSBoosterActive then
-        ApplyFPSBooster(false)
-    end
-end)
-    end
-end)
 
 -- ========== INICIAR ==========
 CreateUI()
